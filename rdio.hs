@@ -76,6 +76,11 @@ runRequest params = do
     tok <- ask    
     liftM extractResponse $ runOAuthM tok $ signRq2 HMACSHA1 Nothing (srvUrl (B.pack . toParams $ params)) >>= serviceRequest CurlClient
 
+-- if the first parameter is a Just, then return the second parameter
+-- otherwise return an empty list
+addMaybe (Just a) b = b
+addMaybe Nothing b = []
+
 -- ADTs for RDIO
 
 data RdioScope = USER_SCOPE | FRIENDS_SCOPE | EVERYONE_SCOPE
@@ -89,60 +94,59 @@ data RdioCollaborationMode = NO_COLLABORATION | COLLABORATION_WITH_ALL | COLLABO
 -- RDIO methods
 
 -- CORE methods
-get keys extras options = runRequest [("method", "get"), ("keys", U.join "," keys), ("extras", U.join "," extras), ("options", jsonify_tuples options)] 
+get keys extras options = runRequest $ [("method", "get"), ("keys", U.join "," keys)] ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)]) ++ (addMaybe options [("options", jsonify_tuples $ fromJust options)])
 
-getObjectFromShortCode short_code extras = runRequest [("method", "getObjectFromShortCode"), ("short_code", short_code), ("extras", extras)]
+getObjectFromShortCode short_code extras = runRequest $ [("method", "getObjectFromShortCode"), ("short_code", short_code)] ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)])
 
-getObjectFromUrl url extras = runRequest [("method", "getObjectFromUrl"), ("url", url), ("extras", extras)]
+getObjectFromUrl url extras = runRequest $ [("method", "getObjectFromUrl"), ("url", url)] ++  (addMaybe extras [("extras", U.join "," $ fromJust extras)])
 
 -- CATALOG methods
-getAlbumsByUPC upc extras = runRequest [("method", "getAlbumsByUPC"), ("upc", upc), ("extras", U.join "," extras)]
+getAlbumsByUPC upc extras = runRequest $ [("method", "getAlbumsByUPC"), ("upc", upc)] ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)])
 
-getAlbumsForArtist :: (MonadReader Token m, MonadIO m) => String -> Bool -> [[Char]] -> Int -> Int -> m (J.JSObject J.JSValue)
-getAlbumsForArtist artist featuring extras start count = runRequest [("method", "getAlbumsForArtist"), ("artist", artist), ("featuring", (bool_to_s featuring)), ("extras", U.join "," extras), ("start", (show start)), ("count", (show count))]
+getAlbumsForArtist :: (MonadReader Token m, MonadIO m) => String -> Maybe Bool -> Maybe [[Char]] -> Maybe Int -> Maybe Int -> m (J.JSObject J.JSValue)
+getAlbumsForArtist artist featuring extras start count = runRequest $ [("method", "getAlbumsForArtist"), ("artist", artist)] ++ (addMaybe featuring [("featuring", (bool_to_s $ fromJust featuring))]) ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)]) ++ (addMaybe start [("start", show $ fromJust start)]) ++ (addMaybe count [("count", show $ fromJust count)])
 
-getTracksByISRC isrc extras = runRequest [("method", "getTracksByISRC"), ("isrc", isrc), ("extras", U.join "," extras)]
+getTracksByISRC isrc extras = runRequest $ [("method", "getTracksByISRC"), ("isrc", isrc)] ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)])
 
-getTracksForArtist :: (MonadReader Token m, MonadIO m) => String -> Bool -> Int -> Int -> [String] -> m (J.JSObject J.JSValue)
-getTracksForArtist artist appears_on start count extras = runRequest [("method", "getTracksForArtist"), ("artist", artist), ("appears_on", (bool_to_s appears_on)), ("start", (show start)), ("count", (show count)), ("extras", U.join "," extras)]
+getTracksForArtist :: (MonadReader Token m, MonadIO m) => String -> Maybe Bool -> Maybe Int -> Maybe Int -> Maybe [String] -> m (J.JSObject J.JSValue)
+getTracksForArtist artist appears_on start count extras = runRequest $ [("method", "getTracksForArtist"), ("artist", artist)] ++ (addMaybe appears_on [("appears_on", bool_to_s $ fromJust appears_on)]) ++ (addMaybe start [("start", show $ fromJust start)]) ++ (addMaybe count [("count", show $ fromJust count)]) ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)])
 
 search
-  :: (MonadReader Token m, MonadIO m) => String -> [RdioType] -> Bool -> [[Char]] -> Int -> Int -> m (J.JSObject J.JSValue)
-search query types never_or extras start count = runRequest [("method", "search"), ("query", query), ("types", U.join "," (map pretty types)), ("never_or", (bool_to_s never_or)), ("extras", U.join "," extras), ("start", (show start)), ("count", (show count))]
+  :: (MonadReader Token m, MonadIO m) => String -> [RdioType] -> Maybe Bool -> Maybe [String] -> Maybe Int -> Maybe Int -> m (J.JSObject J.JSValue)
+search query types never_or extras start count = runRequest $ [("method", "search"), ("query", query), ("types", U.join "," (map pretty types))] ++ (addMaybe never_or [("never_or", bool_to_s $ fromJust never_or)]) ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)]) ++ (addMaybe start [("start", show $ fromJust start)]) ++ (addMaybe count [("count", show $ fromJust count)])
     where pretty ARTIST_TYPE = "Artist"
           pretty ALBUM_TYPE = "Album"
           pretty TRACK_TYPE = "Track"
           pretty PLAYLIST_TYPE = "Playlist"
           pretty USER_TYPE = "User"
 
-searchSuggestions query extras = runRequest [("method", "searchSuggestions"), ("query", query), ("extras", U.join "," extras)]
+searchSuggestions query extras = runRequest $ [("method", "searchSuggestions"), ("query", query)] ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)])
 
 -- COLLECTION methods
 addToCollection keys = runRequest [("method", "addToCollection"), ("keys", U.join "," keys)]
 
-getAlbumsForArtistInCollection artist user extras = runRequest [("method", "getAlbumsForArtistInCollection"),("artist", artist), ("user", user), ("extras", extras)]
+getAlbumsForArtistInCollection artist user extras = runRequest $ [("method", "getAlbumsForArtistInCollection"),("artist", artist)] ++ (addMaybe user [("user", fromJust user)]) ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)])
 
-getAlbumsInCollection :: (MonadReader Token m, MonadIO m) => String -> Int -> Int -> RdioSort -> String -> [String] -> m (J.JSObject J.JSValue)
-getAlbumsInCollection user start count sort query extras = runRequest [("method", "getAlbumsInCollection"), ("user", user), ("start", (show start)), ("count", (show count)), ("sort", (pretty sort)), ("query", query), ("extras", U.join "," extras)]
+getAlbumsInCollection :: (MonadReader Token m, MonadIO m) => Maybe String -> Maybe Int -> Maybe Int -> Maybe RdioSort -> Maybe String -> Maybe [String] -> m (J.JSObject J.JSValue)
+getAlbumsInCollection user start count sort query extras = runRequest $ [("method", "getAlbumsInCollection")] ++ (addMaybe user [("user", fromJust user)]) ++ (addMaybe start [("start", show $ fromJust start)]) ++ (addMaybe count [("count", show $ fromJust count)]) ++ (addMaybe sort [("sort", pretty $ fromJust sort)]) ++ (addMaybe query [("query", fromJust query)]) ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)])
     where pretty DATE_ADDED_SORT = "dateAdded"
           pretty PLAY_COUNT_SORT = "playCount"
           pretty ARTIST_SORT = "artist"
           pretty NAME_SORT = "name"
 
-getArtistsInCollection :: (MonadReader Token m, MonadIO m) => String -> Int -> Int -> RdioSort -> String -> [String] -> m (J.JSObject J.JSValue)
-getArtistsInCollection user start count sort query extras = runRequest [("method", "getArtistsInCollection"), ("user", user), ("start", (show start)), ("count", (show count)), ("sort", (pretty sort)), ("query", query), ("extras", U.join "," extras)]
+getArtistsInCollection :: (MonadReader Token m, MonadIO m) => Maybe String -> Maybe Int -> Maybe Int -> Maybe RdioSort -> Maybe String -> Maybe [String] -> m (J.JSObject J.JSValue)
+getArtistsInCollection user start count sort query extras = runRequest $ [("method", "getArtistsInCollection")] ++ (addMaybe user [("user", fromJust user)]) ++ (addMaybe start [("start", show $ fromJust start)]) ++ (addMaybe count [("count", show $ fromJust count)]) ++ (addMaybe sort [("sort", pretty $ fromJust sort)]) ++ (addMaybe query [("query", fromJust query)]) ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)])
     where pretty DATE_ADDED_SORT = "dateAdded"
           pretty PLAY_COUNT_SORT = "playCount"
           pretty ARTIST_SORT = "artist"
           pretty NAME_SORT = "name"
 
-getTracksForAlbumInCollection album user extras = runRequest [("method", "getTracksForAlbumInCollection"), ("album", album), ("user", user), ("extras", U.join "," extras)]
+getTracksForAlbumInCollection album user extras = runRequest $ [("method", "getTracksForAlbumInCollection"), ("album", album)] ++ (addMaybe user [("user", fromJust user)]) ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)])
 
+getTracksForArtistInCollection artist user extras = runRequest $ [("method", "getTracksForArtistInCollection"), ("artist", artist)] ++ (addMaybe user [("user", fromJust user)]) ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)])
 
-getTracksForArtistInCollection artist user extras = runRequest [("method", "getTracksForArtistInCollection"), ("artist", artist), ("user", user), ("extras", U.join "," extras)]
-
-getTracksInCollection :: (MonadReader Token m, MonadIO m) => String -> Int -> Int -> RdioSort -> String -> [String] -> m (J.JSObject J.JSValue)
-getTracksInCollection user start count sort query extras = runRequest [("method", "getTracksInCollection"), ("user", user), ("start", (show start)), ("count", (show count)), ("sort", (pretty sort)), ("query", query), ("extras", U.join "," extras)]
+getTracksInCollection :: (MonadReader Token m, MonadIO m) => Maybe String -> Maybe Int -> Maybe Int -> Maybe RdioSort -> Maybe String -> Maybe [String] -> m (J.JSObject J.JSValue)
+getTracksInCollection user start count sort query extras = runRequest $ [("method", "getTracksInCollection")] ++ (addMaybe user [("user", fromJust user)]) ++ (addMaybe start [("start", show $ fromJust start)]) ++ (addMaybe count [("count", show $ fromJust count)]) ++ (addMaybe sort [("sort", pretty $ fromJust sort)]) ++ (addMaybe query [("query", fromJust query)]) ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)])
     where pretty DATE_ADDED_SORT = "dateAdded"
           pretty PLAY_COUNT_SORT = "playCount"
           pretty ARTIST_SORT = "artist"
@@ -156,11 +160,11 @@ setAvailableOffline keys offline = runRequest [("method", "setAvailableOffline")
 -- PLAYLIST methods
 addToPlaylist playlist tracks = runRequest [("method", "addToPlaylist"), ("playlist", playlist), ("tracks", U.join "," tracks)]
 
-createPlaylist name description tracks extras = runRequest [("method", "createPlaylist"), ("name", name), ("description", description), ("tracks", U.join "," tracks), ("extras", U.join "," extras)]
+createPlaylist name description tracks extras = runRequest $ [("method", "createPlaylist"), ("name", name), ("description", description), ("tracks", U.join "," tracks)] ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)])
 
 deletePlaylist playlist = runRequest [("method", "deletePlaylist"), ("playlist", playlist)]
 
-getPlaylists extras = runRequest [("method", "getPlaylists"), ("extras", U.join "," extras)]
+getPlaylists extras = runRequest $ [("method", "getPlaylists")] ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)])
 
 removeFromPlaylist :: (MonadReader Token m, MonadIO m) => String -> Int -> Int -> [[Char]] -> m (J.JSObject J.JSValue)
 removeFromPlaylist playlist index count tracks = runRequest [("method", "removeFromPlaylist"), ("playlist", playlist), ("index", (show index)), ("count", (show count)), ("tracks", U.join "," tracks)]
@@ -181,48 +185,48 @@ setPlaylistOrder playlist tracks = runRequest [("method", "setPlaylistOrder"), (
 -- SOCIAL NETWORK methods
 addFriend user = runRequest [("method", "addFriend"), ("user", user)]
 
-currentUser extras = runRequest [("method", "currentUser"), ("extras", U.join "," extras)]
+currentUser extras = runRequest $ [("method", "currentUser")] ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)])
 
-findUserByEmail email = runRequest [("method", "findUser"), ("email", email)]
+findUserByEmail email extras = runRequest $ [("method", "findUser"), ("email", email)] ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)])
 
-findUserByVanityName vanityName = runRequest [("method", "findUser"), ("vanityName", vanityName)]
+findUserByVanityName vanityName extras = runRequest $ [("method", "findUser"), ("vanityName", vanityName)] ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)])
 
 removeFriend user = runRequest [("method", "removeFriend"), ("user", user)]
 
-userFollowers :: (MonadReader Token m, MonadIO m) => String -> Int -> Int -> [String] -> m (J.JSObject J.JSValue)
-userFollowers user start count extras = runRequest [("method", "userFollowers"), ("user", user), ("start", (show start)), ("count", (show count)), ("extras", U.join "," extras)]
+userFollowers :: (MonadReader Token m, MonadIO m) => String -> Maybe Int -> Maybe Int -> Maybe [String] -> m (J.JSObject J.JSValue)
+userFollowers user start count extras = runRequest $ [("method", "userFollowers"), ("user", user)] ++ (addMaybe start [("start", show start)]) ++ (addMaybe count [("count", show $ fromJust count)]) ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)])
 
-userFollowing :: (MonadReader Token m, MonadIO m) => String -> Int -> Int -> [String] -> m (J.JSObject J.JSValue)
-userFollowing user start count extras = runRequest [("method", "userFollowing"), ("user", user), ("start", (show start)), ("count", (show count)), ("extras", U.join "," extras)]
+userFollowing :: (MonadReader Token m, MonadIO m) => String -> Maybe Int -> Maybe Int -> Maybe [String] -> m (J.JSObject J.JSValue)
+userFollowing user start count extras = runRequest $ [("method", "userFollowing"), ("user", user)] ++ (addMaybe start [("start", show $ fromJust start)]) ++ (addMaybe count [("count", show $ fromJust count)]) ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)])
 
 -- ACTIVITY AND STATISTICS methods
 
 -- TODO test this, what happens if you don't pass in a last_id?
-getActivityStream user scope last_id extras = runRequest [("method", "getActivityStream"), ("scope", (pretty scope)), ("last_id", last_id), ("extras", U.join "," extras)]
+getActivityStream user scope last_id extras = runRequest $ [("method", "getActivityStream"), ("scope", (pretty scope))] ++ (addMaybe last_id [("last_id", fromJust last_id)]) ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)])
     where pretty USER_SCOPE = "user"
           pretty FRIENDS_SCOPE = "friends"
           pretty EVERYONE_SCOPE = "everyone"
 
-getHeavyRotation :: (MonadReader Token m, MonadIO m) => String -> RdioObjectType -> Bool -> Int -> Int -> Int -> [String] -> m (J.JSObject J.JSValue)
-getHeavyRotation user object_type friends limit start count extras = runRequest [("method", "getHeavyRotation"), ("user", user), ("object_type", (pretty object_type)), ("friends", bool_to_s friends), ("limit", show limit), ("start", (show start)), ("count", (show count)), ("extras", U.join "," extras)]
+getHeavyRotation :: (MonadReader Token m, MonadIO m) => Maybe String -> Maybe RdioObjectType -> Maybe Bool -> Maybe Int -> Maybe Int -> Maybe Int -> Maybe [String] -> m (J.JSObject J.JSValue)
+getHeavyRotation user object_type friends limit start count extras = runRequest $ [("method", "getHeavyRotation")] ++ (addMaybe user [("user", fromJust user)]) ++ (addMaybe object_type [("object_type", pretty $ fromJust object_type)]) ++ (addMaybe friends [("friends", bool_to_s $ fromJust friends)]) ++ (addMaybe limit [("limit", show $ fromJust limit)]) ++ (addMaybe start [("start", show $ fromJust start)]) ++ (addMaybe count [("count", show $ fromJust count)]) ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)])
     where pretty ARTISTS_OBJECT_TYPE = "artist"
           pretty ALBUMS_OBJECT_TYPE = "albums"
 
-getNewReleases :: (MonadReader Token m, MonadIO m) => RdioTime -> Int -> Int -> [String] -> m (J.JSObject J.JSValue)
-getNewReleases time start count extras = runRequest [("method", "getNewReleases"), ("time", (pretty time)), ("start", (show start)), ("count", (show count)), ("extras", U.join "," extras)]
+getNewReleases :: (MonadReader Token m, MonadIO m) => Maybe RdioTime -> Maybe Int -> Maybe Int -> Maybe [String] -> m (J.JSObject J.JSValue)
+getNewReleases time start count extras = runRequest $ [("method", "getNewReleases")] ++ (addMaybe time [("time", pretty $ fromJust time)]) ++ (addMaybe start [("start", show $ fromJust start)]) ++ (addMaybe count [("count", show $ fromJust count)]) ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)])
     where pretty THIS_WEEK_TIME = "thisweek"
           pretty LAST_WEEK_TIME = "lastweek"
           pretty TWO_WEEKS_TIME = "twoweeks"
 
-getTopCharts :: (MonadReader Token m, MonadIO m) => RdioResultType -> Int -> Int -> [String] -> m (J.JSObject J.JSValue)
-getTopCharts result_type start count extras = runRequest [("method", "getTopCharts"), ("result_type", (pretty result_type)), ("start", (show start)), ("count", (show count)), ("extras", U.join "," extras)]
+getTopCharts :: (MonadReader Token m, MonadIO m) => RdioResultType -> Maybe Int -> Maybe Int -> Maybe [String] -> m (J.JSObject J.JSValue)
+getTopCharts result_type start count extras = runRequest $ [("method", "getTopCharts"), ("result_type", (pretty result_type))] ++ (addMaybe start [("start", show $ fromJust start)]) ++ (addMaybe count [("count", show $ fromJust count)]) ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)])
     where pretty ARTIST_RESULT_TYPE = "Artist"
           pretty ALBUM_RESULT_TYPE = "Album"
           pretty TRACK_RESULT_TYPE = "Track"
           pretty PLAYLIST_RESULT_TYPE = "Playlist"
 
 -- PLAYBACK methods
-getPlaybackToken domain = runRequest [("method", "getPlaybackToken"), ("domain", domain)]
+getPlaybackToken domain = runRequest $ [("method", "getPlaybackToken")] ++ (addMaybe domain [("domain", fromJust domain)])
 
 
 -- TEST CODE:
