@@ -63,7 +63,7 @@ import qualified Data.ByteString.Lazy.Char8 as B
 import Data.Monoid
 import Debug.Trace
 import Data.List.Split
-import Data.URLEncoded
+import qualified Data.URLEncoded as UE
 import qualified Data.List.Utils as U
 import qualified Control.Monad.State as S
 import Control.Monad.Reader
@@ -79,27 +79,37 @@ conv x = RdioDict $ map (\(str, jsval) -> (str, clean jsval) ) $ J.fromJSObject 
 -- helper methods to make all values into RdioResult values so they can be stuffed into
 -- an RDioDict
 clean (J.JSObject x) = conv x
-clean (J.JSString x) = RdioValue $ J.fromJSString x
-clean (J.JSBool x) = RdioValue $ show x
-clean (J.JSRational _ x) = RdioValue $ show x
+clean (J.JSString x) = RdioString $ J.fromJSString x
+clean (J.JSBool x) = RdioBool x
+clean (J.JSRational _ x) = RdioRational x
 clean (J.JSArray xs) = RdioArray $ map clean xs
+clean J.JSNull = RdioNull
 
-data RdioResult = RdioDict [(String, RdioResult)] | RdioArray [RdioResult] | RdioValue String
+data RdioResult = RdioDict {rdioDictValue :: [(String, RdioResult)]} | RdioArray {rdioArrayValue :: [RdioResult]} | RdioString {rdioStringValue :: String} | RdioRational {rdioRationalValue :: Rational} | RdioBool {rdioBoolValue :: Bool} | RdioNull
 
 dropLast x l = take (L.genericLength l - x) l
 
 instance Show RdioResult where
-    show (RdioDict xs) = "{" ++ (dropLast 2 (foldl (\acc (str, obj) -> acc ++ str ++ " : " ++ (show obj) ++ ", ") "" xs)) ++ "}"
-    show (RdioArray xs) = "[" ++ (foldl (\acc x -> acc ++ (show x) ++ ", ") "" xs) ++ "]"
-    show (RdioValue x) = x
+    show (RdioDict xs) = "{" ++ (dropLast 2 (foldl (\acc (str, obj) -> acc ++ "\"" ++ str ++ "\"" ++ " : " ++ (show obj) ++ ", ") "" xs)) ++ "}"
+    show (RdioArray xs) = "[" ++ (dropLast 2 (foldl (\acc x -> acc ++ (show x) ++ ", ") "" xs)) ++ "]"
+    show (RdioString x) = "\"" ++ x ++ "\""
+    show (RdioBool x) = show x
+    show (RdioRational x) = show x
+    show RdioNull = ""
 
 
 instance J.JSON RdioResult where
     showJSON (RdioDict xs) = J.showJSONs xs
-    showJSON (RdioValue x) = J.showJSON x
+    showJSON (RdioString x) = J.showJSON x
+    showJSON (RdioRational x) = J.showJSON (show x)
+    showJSON (RdioBool x) = J.showJSON (show x)
     showJSON (RdioArray xs) = J.showJSONs xs
+    showJSON RdioNull = J.showJSON ""
     readJSON (J.JSObject obj) = J.Ok $ conv obj
 
+
+(RdioDict xs) ! str = snd . head $ filter (\(key, obj) -> key == str) xs
+_ ! _ = error "Only RdioDict types can use '!'"
 
 
 reqUrl = fromJust . parseURL $ "http://api.rdio.com/oauth/request_token"
@@ -117,7 +127,7 @@ twoLegToken key secret   = fromApplication (app key secret)
 
 -- convert a list of parameters to a string that can be passed via GET/POST
 toParams :: [(String, String)] -> String
-toParams = show . importList
+toParams = show . UE.importList
 
 -- given a key and a secret, does three-legged auth and returns an auth token
 threeLegToken key secret = runOAuthM (twoLegToken key secret) $ do
@@ -296,9 +306,4 @@ getTopCharts result_type start count extras = runRequest $ [("method", "getTopCh
 -- PLAYBACK methods
 getPlaybackToken domain = runRequest $ [("method", "getPlaybackToken")] ++ (addMaybe domain [("domain", fromJust domain)])
 
-
--- TEST CODE:
-key = "[YOUR KEY]"
-secret = "[YOUR SECRET]"
-tok = twoLegToken key secret
 
