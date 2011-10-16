@@ -55,7 +55,7 @@ Returns:
 
 * All responses are RdioResult objects, which is an ADT defined as:
 
-	data RdioResult = RdioDict {rdioDictValue :: [(String, RdioResult)]} | RdioArray {rdioArrayValue :: [RdioResult]} | RdioString {rdioStringValue :: String} | RdioRational {rdioRationalValue :: Rational} | RdioBool {rdioBoolValue :: Bool} | RdioNull
+    data RdioResult = RdioDict {rdioDictValue :: [(String, RdioResult)]} | RdioArray {rdioArrayValue :: [RdioResult]} | RdioString {rdioStringValue :: String} | RdioRational {rdioRationalValue :: Rational} | RdioBool {rdioBoolValue :: Bool} | RdioNull
 
 This reflects the data types allowed in JSON: Dictionaries, Arrays, Strings, Rationals, Booleans and Null values.
 
@@ -68,6 +68,7 @@ We can access pieces of the response like so:
 		(putStrLn . show) $ rdioDictValue x !! 1 
 
 (Assuming the response was:)
+
 	{"status" : "ok", "result" : {"a184236" : {"baseIcon" : "album/c/a/f/000000000002cfac/square-200.jpg", "releaseDate" : "2005-11-08", "displayDate" : "Nov  8, 2005", "duration" : 2558 % 1, "isClean" : False, "shortUrl" : "http://rd.io/x/Qj5AkO8", "canStream" : True, "embedUrl" : "http://rd.io/e/Qj5AkO8", "type" : "a", "price" : "9.99", "key" : "a184236", "icon" : "http://media.rd.io/album/c/a/f/000000000002cfac/square-200.jpg", "canSample" : True, "name" : "Bleach", "isExplicit" : False, "artist" : "Nirvana", "url" : "/artist/Nirvana/album/Bleach/", "artistKey" : "r89765", "length" : 13 % 1, "trackKeys" : ["t2221202", "t2221252", "t2221287", "t2221335", "t2221373", "t2221437", "t2221498", "t2221554", "t2221624", "t2221671", "t2221740", "t2221839", "t2221913"], "canTether" : True, "artistUrl" : "/artist/Nirvana/"}}}
 
 That prints out the result part of the response. This is ugly syntax, so two convenience functions are provided:
@@ -112,11 +113,11 @@ Here's a script that gets newly released albums and adds the first album to the 
 ## Dependencies
 Rdioh depends on:
 
-Text.JSON
+[Text.JSON](http://hackage.haskell.org/packages/archive/json/0.3.3/doc/html/Text-JSON.html)
 
-Network.OAuth
+[Network.OAuth](http://hackage.haskell.org/package/hoauth)
 
-Data.URLEncoded
+[Data.URLEncoded](http://hackage.haskell.org/packages/archive/urlencoded/0.3.0.0/doc/html/Data-URLEncoded.html)
 
 ## License
 MIT Licensed. Copyright 2011- [Aditya Bhargava](http://www.wefoundland.com).
