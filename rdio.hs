@@ -2,7 +2,7 @@
 
 module Rdio (
 twoLegToken, threeLegToken,
-(!), (.!),
+(!), (.!), keys, values,
 RdioScope(..), RdioSort(..), RdioObjectType(..), RdioTime(..), RdioResultType(..), RdioType(..), RdioCollaborationMode(..), RdioResult(..),
 get, getObjectFromShortCode, getObjectFromUrl,
 getAlbumsByUPC, getAlbumsForArtist, getTracksByISRC, getTracksForArtist, search, searchSuggestions,

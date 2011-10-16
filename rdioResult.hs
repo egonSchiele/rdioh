@@ -42,3 +42,5 @@ instance J.JSON RdioResult where
 (RdioDict xs) ! str = snd . head $ filter (\(key, obj) -> key == str) xs
 (RdioArray xs) .! num = xs !! num
 
+keys (RdioDict xs) = map fst xs
+values (RdioDict xs) = map snd xs
