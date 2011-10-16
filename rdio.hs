@@ -52,23 +52,16 @@ getPlaybackToken
 ) where
 
 import Data.Maybe 
-import Control.Monad.Trans
 import Network.OAuth.Consumer
-import Network.OAuth.Http.Request
 import Network.OAuth.Http.Response
 import Network.OAuth.Http.HttpClient
 import Network.OAuth.Http.CurlHttpClient
 import Network.OAuth.Http.PercentEncoding
 import qualified Data.ByteString.Lazy.Char8 as B
-import Data.Monoid
-import Debug.Trace
-import Data.List.Split
 import qualified Data.URLEncoded as UE
 import qualified Data.List.Utils as U
-import qualified Control.Monad.State as S
 import Control.Monad.Reader
 import qualified Text.JSON as J
-import Control.Monad
 import qualified Data.List as L
 
 -- functions to convert a JSValue to a RdioResult:
