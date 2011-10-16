@@ -19,7 +19,7 @@ To complete 3-legged authentication, he / she will have to open the url, hit 'Al
 
 Getting Information On An Album (2-legged OAuth):
 
-	import Rdio
+	import Rdioh
 	import Control.Monad.Reader
 
 	key = "[YOUR KEY]"
@@ -34,7 +34,7 @@ Returns:
 
 Add a Track To The Current User's Collection (3-legged OAuth):
 
-	import Rdio
+	import Rdioh
 	import Control.Monad.Reader
 
 	key = "[YOUR KEY]"
@@ -94,7 +94,7 @@ Finally, you can get all the keys or values from an RdioDict by using `keys` and
 
 Here's a script that gets newly released albums and adds the first album to the current user's collection:
 
-	import Rdio
+	import Rdioh
 	import Control.Monad.Reader
 
 	key = "[YOUR KEY]"

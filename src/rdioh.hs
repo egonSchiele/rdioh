@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module Rdio (
+module Rdioh (
 twoLegToken, threeLegToken,
 (!), (.!), keys, values,
 RdioScope(..), RdioSort(..), RdioObjectType(..), RdioTime(..), RdioResultType(..), RdioType(..), RdioCollaborationMode(..), RdioResult(..),
