@@ -53,6 +53,7 @@ getPlaybackToken
 
 import Data.Maybe 
 import Network.OAuth.Consumer
+import Network.OAuth.Http.Request
 import Network.OAuth.Http.Response
 import Network.OAuth.Http.HttpClient
 import Network.OAuth.Http.CurlHttpClient
