@@ -1,53 +1,15 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 module Rdio (
-twoLegToken,
-threeLegToken,
-RdioScope(USER_SCOPE, FRIENDS_SCOPE, EVERYONE_SCOPE),
-RdioSort(DATE_ADDED_SORT, PLAY_COUNT_SORT, ARTIST_SORT, NAME_SORT),
-RdioObjectType(ARTISTS_OBJECT_TYPE, ALBUMS_OBJECT_TYPE),
-RdioTime(THIS_WEEK_TIME, LAST_WEEK_TIME, TWO_WEEKS_TIME),
-RdioResultType(ARTIST_RESULT_TYPE, ALBUM_RESULT_TYPE, TRACK_RESULT_TYPE, PLAYLIST_RESULT_TYPE),
-RdioType(ARTIST_TYPE, ALBUM_TYPE, TRACK_TYPE, PLAYLIST_TYPE, USER_TYPE),
-RdioCollaborationMode(NO_COLLABORATION, COLLABORATION_WITH_ALL, COLLABORATION_WITH_FOLLOWED),
-get,
-getObjectFromShortCode,
-getObjectFromUrl,
-getAlbumsByUPC,
-getAlbumsForArtist,
-getTracksByISRC,
-getTracksForArtist,
-search,
-searchSuggestions,
-addToCollection,
-getAlbumsForArtistInCollection,
-getAlbumsInCollection,
-getArtistsInCollection,
-getTracksForAlbumInCollection,
-getTracksForArtistInCollection,
-getTracksInCollection,
-removeFromCollection,
-setAvailableOffline,
-addToPlaylist,
-createPlaylist,
-deletePlaylist,
-getPlaylists,
-removeFromPlaylist,
-setPlaylistCollaborating,
-setPlaylistCollaborationMode,
-setPlaylistFields,
-setPlaylistOrder,
-addFriend,
-currentUser,
-findUserByEmail,
-findUserByVanityName,
-removeFriend,
-userFollowers,
-userFollowing,
-getActivityStream,
-getHeavyRotation,
-getNewReleases,
-getTopCharts,
+twoLegToken, threeLegToken,
+(!), (.!),
+RdioScope(..), RdioSort(..), RdioObjectType(..), RdioTime(..), RdioResultType(..), RdioType(..), RdioCollaborationMode(..), RdioResult(..),
+get, getObjectFromShortCode, getObjectFromUrl,
+getAlbumsByUPC, getAlbumsForArtist, getTracksByISRC, getTracksForArtist, search, searchSuggestions,
+addToCollection, getAlbumsForArtistInCollection, getAlbumsInCollection, getArtistsInCollection, getTracksForAlbumInCollection, getTracksForArtistInCollection, getTracksInCollection, removeFromCollection, setAvailableOffline,
+addToPlaylist, createPlaylist, deletePlaylist, getPlaylists, removeFromPlaylist, setPlaylistCollaborating, setPlaylistCollaborationMode, setPlaylistFields, setPlaylistOrder,
+addFriend, currentUser, findUserByEmail, findUserByVanityName, removeFriend, userFollowers, userFollowing,
+getActivityStream, getHeavyRotation, getNewReleases, getTopCharts,
 getPlaybackToken
 ) where
 
@@ -103,8 +65,7 @@ instance J.JSON RdioResult where
 
 
 (RdioDict xs) ! str = snd . head $ filter (\(key, obj) -> key == str) xs
-_ ! _ = error "Only RdioDict types can use '!'"
-
+(RdioArray xs) .! num = xs !! num
 
 reqUrl = fromJust . parseURL $ "http://api.rdio.com/oauth/request_token"
 accUrl = fromJust . parseURL $ "http://api.rdio.com/oauth/access_token"
@@ -273,7 +234,6 @@ userFollowing user start count extras = runRequest $ [("method", "userFollowing"
 
 -- ACTIVITY AND STATISTICS methods
 
--- TODO test this, what happens if you don't pass in a last_id?
 getActivityStream user scope last_id extras = runRequest $ [("method", "getActivityStream"), ("scope", (pretty scope))] ++ (addMaybe last_id [("last_id", fromJust last_id)]) ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)])
     where pretty USER_SCOPE = "user"
           pretty FRIENDS_SCOPE = "friends"
