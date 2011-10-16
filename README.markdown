@@ -53,7 +53,7 @@ Returns:
 
 * All optional parameters are of type `Maybe`. You can leave them out by passing in `Nothing`.
 
-* All responses are RdioResult objects, which is an ADT defined as:
+* All responses are RdioResult objects, which is an ADT defined as
 
     data RdioResult = RdioDict {rdioDictValue :: [(String, RdioResult)]} | RdioArray {rdioArrayValue :: [RdioResult]} | RdioString {rdioStringValue :: String} | RdioRational {rdioRationalValue :: Rational} | RdioBool {rdioBoolValue :: Bool} | RdioNull
 
