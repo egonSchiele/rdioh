@@ -2,6 +2,7 @@ name: rdioh
 version: 0.1.0
 category: Network, Rdio
 license: MIT
+license-file: LICENSE
 author: Aditya Bhargava
 maintainer: Aditya Bhargava <aditya at wefoundland.com>
 stability: experimental
