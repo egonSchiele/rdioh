@@ -1,6 +1,6 @@
 name: rdioh
 version: 0.1.0
-category: Network, Rdio
+category: Network, API, Web
 license: MIT
 license-file: LICENSE
 author: Aditya Bhargava
@@ -13,7 +13,11 @@ description: This library implements methods for Rdio's API.
 			 It supports 2-legged and 3-legged OAuth.
 
 library
-  build-depends: json
+  build-depends: base
+               , mtl
+               , MissingH
+               , bytestring
+               , json
                , hoauth
                , urlencoded
   exposed-modules: Rdioh

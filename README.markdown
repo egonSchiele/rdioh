@@ -14,7 +14,7 @@ Rdio supports 2-legged and 3-legged OAuth. 2-legged OAuth only requires a key an
 
 To complete 3-legged authentication, he / she will have to open the url, hit 'Allow', and paste the given PIN back into your application.
 
-# Examples
+## Examples
 
 
 Getting Information On An Album (2-legged OAuth):
@@ -109,15 +109,6 @@ Here's a script that gets newly released albums and adds the first album to the 
 		tok <- threeLegToken key secret
 		x <- runReaderT r tok
 		putStrLn . show $ x
-
-## Dependencies
-Rdioh depends on:
-
-[Text.JSON](http://hackage.haskell.org/packages/archive/json/0.3.3/doc/html/Text-JSON.html)
-
-[Network.OAuth](http://hackage.haskell.org/package/hoauth)
-
-[Data.URLEncoded](http://hackage.haskell.org/packages/archive/urlencoded/0.3.0.0/doc/html/Data-URLEncoded.html)
 
 ## License
 MIT Licensed. Copyright 2011- [Aditya Bhargava](http://www.wefoundland.com).
