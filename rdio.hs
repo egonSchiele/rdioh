@@ -25,52 +25,13 @@ import qualified Data.URLEncoded as UE
 import qualified Data.List.Utils as U
 import Control.Monad.Reader
 import qualified Text.JSON as J
-import qualified Data.List as L
+import RdioResult
 
--- functions to convert a JSValue to a RdioResult:
-
--- this one converts all JSONObjects to nice tuples that can be used to make an RDioDict
-conv x = RdioDict $ map (\(str, jsval) -> (str, clean jsval) ) $ J.fromJSObject x
-
--- helper methods to make all values into RdioResult values so they can be stuffed into
--- an RDioDict
-clean (J.JSObject x) = conv x
-clean (J.JSString x) = RdioString $ J.fromJSString x
-clean (J.JSBool x) = RdioBool x
-clean (J.JSRational _ x) = RdioRational x
-clean (J.JSArray xs) = RdioArray $ map clean xs
-clean J.JSNull = RdioNull
-
-data RdioResult = RdioDict {rdioDictValue :: [(String, RdioResult)]} | RdioArray {rdioArrayValue :: [RdioResult]} | RdioString {rdioStringValue :: String} | RdioRational {rdioRationalValue :: Rational} | RdioBool {rdioBoolValue :: Bool} | RdioNull
-
-dropLast x l = take (L.genericLength l - x) l
-
-instance Show RdioResult where
-    show (RdioDict xs) = "{" ++ (dropLast 2 (foldl (\acc (str, obj) -> acc ++ "\"" ++ str ++ "\"" ++ " : " ++ (show obj) ++ ", ") "" xs)) ++ "}"
-    show (RdioArray xs) = "[" ++ (dropLast 2 (foldl (\acc x -> acc ++ (show x) ++ ", ") "" xs)) ++ "]"
-    show (RdioString x) = "\"" ++ x ++ "\""
-    show (RdioBool x) = show x
-    show (RdioRational x) = show x
-    show RdioNull = ""
-
-
-instance J.JSON RdioResult where
-    showJSON (RdioDict xs) = J.showJSONs xs
-    showJSON (RdioString x) = J.showJSON x
-    showJSON (RdioRational x) = J.showJSON (show x)
-    showJSON (RdioBool x) = J.showJSON (show x)
-    showJSON (RdioArray xs) = J.showJSONs xs
-    showJSON RdioNull = J.showJSON ""
-    readJSON (J.JSObject obj) = J.Ok $ conv obj
-
-
-(RdioDict xs) ! str = snd . head $ filter (\(key, obj) -> key == str) xs
-(RdioArray xs) .! num = xs !! num
 
 reqUrl = fromJust . parseURL $ "http://api.rdio.com/oauth/request_token"
 accUrl = fromJust . parseURL $ "http://api.rdio.com/oauth/access_token"
 authUrl = ("https://www.rdio.com/oauth/authorize?oauth_token="++) . findWithDefault ("oauth_token","ERROR") . oauthParams
-srvUrl payload = (fromJust . parseURL $ "http://api.rdio.com/1/") { method     = POST
+srvUrl payload = (fromJust . parseURL $ "http://api.rdio.com/1/") { method = POST
                                                           , reqPayload = payload
                                                           , reqHeaders = fromList [("content-type", "application/x-www-form-urlencoded")]
                                                           }
@@ -80,31 +41,33 @@ app key secret = Application key secret OOB
 -- returns a two-legged auth token
 twoLegToken key secret   = fromApplication (app key secret)
 
--- convert a list of parameters to a string that can be passed via GET/POST
-toParams :: [(String, String)] -> String
-toParams = show . UE.importList
-
 -- given a key and a secret, does three-legged auth and returns an auth token
 threeLegToken key secret = runOAuthM (twoLegToken key secret) $ do
     signRq2 HMACSHA1 Nothing reqUrl >>= oauthRequest CurlClient
     cliAskAuthorization authUrl
     signRq2 HMACSHA1 Nothing accUrl >>= oauthRequest CurlClient
 
+-- convert a list of parameters to a string that can be passed via GET/POST
+toParams :: [(String, String)] -> String
+toParams = show . UE.importList
+
 -- convert JSON str to parsed
 toJSON str = fromResult $ (J.decode str :: J.Result (RdioResult))
 
--- extracts just the response from whatever rdio returned
-extractResponse = toJSON . B.unpack . rspPayload
+-- given a list of tuples, return a string that's a JSON object:
+jsonify_tuples t = (++"}") . init $ foldl (\acc (k, v) -> acc ++ k ++ ":" ++ v ++ ",") "{" t
 
 fromResult (J.Ok x) = x
 fromResult (J.Error x) = error x
 
+-- if the first parameter is a Just, then return the second parameter
+-- otherwise return an empty list
+addMaybe (Just a) b = b
+addMaybe Nothing b = []
+
 -- needed b/c haskell capitalizes the first letter otherwise
 bool_to_s True = "true"
 bool_to_s False = "false"
-
--- given a list of tuples, return a string that's a JSON object:
-jsonify_tuples t = (++"}") . init $ foldl (\acc (k, v) -> acc ++ k ++ ":" ++ v ++ ",") "{" t
 
 -- uses the Reader monad to get a token. Then uses that token
 -- to make a request to the service url. The returned response
@@ -114,10 +77,8 @@ runRequest params = do
     tok <- ask    
     liftM extractResponse $ runOAuthM tok $ signRq2 HMACSHA1 Nothing (srvUrl (B.pack . toParams $ params)) >>= serviceRequest CurlClient
 
--- if the first parameter is a Just, then return the second parameter
--- otherwise return an empty list
-addMaybe (Just a) b = b
-addMaybe Nothing b = []
+-- extracts just the response from whatever rdio returned
+extractResponse = toJSON . B.unpack . rspPayload
 
 -- ADTs for RDIO
 
