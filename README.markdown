@@ -3,6 +3,10 @@
 ## About
 This is a Haskell package for accessing [Rdio](http://rdio.com)'s API with OAuth.
 
+## Installation
+
+    cabal install rdioh
+
 ## OAuth
 
 Rdio supports 2-legged and 3-legged OAuth. 2-legged OAuth only requires a key and a secret. You can get both by [registering for a Mashery account](http://developer.rdio.com/member/register).
