@@ -1,5 +1,5 @@
 name: rdioh
-version: 0.1.0
+version: 0.1.1
 category: Network, API, Web
 license: MIT
 license-file: LICENSE
@@ -20,7 +20,7 @@ library
                , json
                , hoauth
                , urlencoded
-  exposed-modules: Rdioh
+  exposed-modules: Rdioh, RdioResult
 
   hs-source-dirs: src
   ghc-options: -W -Wall
