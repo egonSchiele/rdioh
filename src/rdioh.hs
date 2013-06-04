@@ -1,25 +1,8 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module Rdioh (
-twoLegToken, threeLegToken,
-(!), (.!), keys, values,
-RdioScope(..), RdioSort(..), RdioObjectType(..), RdioTime(..), RdioResultType(..), RdioType(..), RdioCollaborationMode(..), RdioResult(..),
-get, getObjectFromShortCode, getObjectFromUrl,
-getAlbumsByUPC, getAlbumsForArtist, getTracksByISRC, getTracksForArtist, search, searchSuggestions,
-addToCollection, getAlbumsForArtistInCollection, getAlbumsInCollection, getArtistsInCollection, getTracksForAlbumInCollection, getTracksForArtistInCollection, getTracksInCollection, removeFromCollection, setAvailableOffline,
-addToPlaylist, createPlaylist, deletePlaylist, getPlaylists, removeFromPlaylist, setPlaylistCollaborating, setPlaylistCollaborationMode, setPlaylistFields, setPlaylistOrder,
-addFriend, currentUser, findUserByEmail, findUserByVanityName, removeFriend, userFollowers, userFollowing,
-getActivityStream, getHeavyRotation, getNewReleases, getTopCharts,
-getPlaybackToken
-) where
-
+module Rdioh where
+import Rdioh.Auth
 import Data.Maybe 
-import Network.OAuth.Consumer
-import Network.OAuth.Http.Request
-import Network.OAuth.Http.Response
-import Network.OAuth.Http.HttpClient
-import Network.OAuth.Http.CurlHttpClient
-import Network.OAuth.Http.PercentEncoding
 import qualified Data.ByteString.Lazy.Char8 as B
 import qualified Data.URLEncoded as UE
 import qualified Data.List.Utils as U
@@ -27,25 +10,16 @@ import Control.Monad.Reader
 import qualified Text.JSON as J
 import RdioResult
 
+import Network.OAuth.Consumer
+import Network.OAuth.Http.Request
+import Network.OAuth.Http.Response
+import Network.OAuth.Http.HttpClient
+import Network.OAuth.Http.CurlHttpClient
+import Network.OAuth.Http.PercentEncoding
 
-reqUrl = fromJust . parseURL $ "http://api.rdio.com/oauth/request_token"
-accUrl = fromJust . parseURL $ "http://api.rdio.com/oauth/access_token"
-authUrl = ("https://www.rdio.com/oauth/authorize?oauth_token="++) . findWithDefault ("oauth_token","ERROR") . oauthParams
-srvUrl payload = (fromJust . parseURL $ "http://api.rdio.com/1/") { method = POST
-                                                          , reqPayload = payload
-                                                          , reqHeaders = fromList [("content-type", "application/x-www-form-urlencoded")]
-                                                          }
 
-app key secret = Application key secret OOB
-
--- returns a two-legged auth token
-twoLegToken key secret   = fromApplication (app key secret)
-
--- given a key and a secret, does three-legged auth and returns an auth token
-threeLegToken key secret = runOAuthM (twoLegToken key secret) $ do
-    signRq2 HMACSHA1 Nothing reqUrl >>= oauthRequest CurlClient
-    cliAskAuthorization authUrl
-    signRq2 HMACSHA1 Nothing accUrl >>= oauthRequest CurlClient
+-- rdioh :: String -> String -> ReaderT r a -> IO a
+rdioh key secret func = runReaderT func (twoLegToken key secret)
 
 -- convert a list of parameters to a string that can be passed via GET/POST
 toParams :: [(String, String)] -> String
@@ -74,7 +48,7 @@ bool_to_s False = "false"
 -- is parsed through extractResponse to return the result parsed
 -- from JSON to something else.
 runRequest params = do
-    tok <- ask    
+    tok <- ask
     liftM extractResponse $ runOAuthM tok $ signRq2 HMACSHA1 Nothing (srvUrl (B.pack . toParams $ params)) >>= serviceRequest CurlClient
 
 -- extracts just the response from whatever rdio returned

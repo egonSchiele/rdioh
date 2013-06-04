@@ -2,3 +2,7 @@
 *.swp
 *.swo
 test.hs
+dist/*
+tags
+key
+secret
