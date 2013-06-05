@@ -5,8 +5,8 @@ import Data.String.Utils
 key = strip . unsafePerformIO . readFile $ "key"
 secret = strip . unsafePerformIO . readFile $ "secret"
 
-req = get ["a184236"] Nothing Nothing
+-- req = get ["a184236"] Nothing Nothing
 
 main = do
-    album <- rdioh key secret req 
-    print album
+    albums <- runRdioh key secret $ getAlbumsForArtist "Radiohead"
+    print albums

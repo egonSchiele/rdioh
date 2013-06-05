@@ -19,6 +19,7 @@ srvUrl payload = (fromJust . parseURL $ "http://api.rdio.com/1/") { method = POS
 app key secret = Application key secret OOB
 
 -- returns a two-legged auth token
+twoLegToken :: String -> String -> Token
 twoLegToken key secret = fromApplication (app key secret)
 
 -- given a key and a secret, does three-legged auth and returns an auth token

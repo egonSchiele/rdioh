@@ -1,5 +1,17 @@
-module Models where
+{-# LANGUAGE OverloadedStrings #-}
+
+module Rdioh.Models where
 import Data.Aeson
+import Control.Applicative
+
+data AlbumExtra = AlbumIframeUrl | AlbumIsCompilation | AlbumLabel | AlbumBigIcon | AlbumReleaseDateISO
+
+instance Show AlbumExtra where
+    show AlbumIframeUrl = "iframeUrl"
+    show AlbumIsCompilation = "isCompilation"
+    show AlbumLabel = "label"
+    show AlbumBigIcon = "bigIcon"
+    show AlbumReleaseDateISO = "releaseDateISO"
 
 data Album = Album {
                albumName :: String,
@@ -7,11 +19,11 @@ data Album = Album {
                albumBaseIcon :: String,
                albumUrl :: String,
                albumArtist :: String,
-               artistUrl :: String,
+               albumArtistUrl :: String,
                isExplicit :: Bool,
                isClean :: Bool,
                albumLength :: Int,
-               artistKey :: String,
+               albumArtistKey :: String,
                trackKeys :: [String],
                price :: Int,
                canStream :: Bool,
@@ -28,7 +40,7 @@ data Album = Album {
                albumLabel :: Maybe String,
                albumBigIcon :: Maybe String,
                releaseDateISO :: Maybe String
-}
+} deriving (Show)
 
 instance FromJSON Album where
   parseJSON (Object v) = Album <$> v .: "name"
@@ -57,7 +69,12 @@ instance FromJSON Album where
                                <*> v .: "label"
                                <*> v .: "bigIcon"
                                <*> v .: "releaseDateISO"
-                               
+
+data ArtistExtra = ArtistAlbumCount
+
+instance Show ArtistExtra where
+    show ArtistAlbumCount = "albumCount"
+
 data Artist = Artist {
             artistName :: String,
             artistKey :: String,
@@ -66,10 +83,11 @@ data Artist = Artist {
             artistIcon :: String,
             artistBaseIcon :: String,
             hasRadio :: Bool,
-            artistShortUrl :: String
+            artistShortUrl :: String,
             radioKey :: String,
-            topSongsKey :: String
-}
+            topSongsKey :: String,
+            artistAlbumCount :: Maybe Int
+} deriving (Show)
 
 instance FromJSON Artist where
   parseJSON (Object v) = Artist <$> v .: "name"
@@ -82,6 +100,9 @@ instance FromJSON Artist where
                                 <*> v .: "shortUrl"
                                 <*> v .: "radioKey"
                                 <*> v .: "topSongsKey"
+                                <*> v .: "albumCount"
+                                
+                                
 
 data Label = Label {
            labelName :: String,
@@ -90,7 +111,7 @@ data Label = Label {
            labelShortUrl :: String,
            labelHasRadio :: String,
            labelRadioKey :: String
-}
+} deriving (Show)
 
 instance FromJSON Label where
   parseJSON (Object v) = Label <$> v .: "name"
@@ -131,7 +152,7 @@ data Track = Track {
            trackIframeUrl :: Maybe String,
            playCount :: Maybe Int,
            trackBigIcon :: Maybe String
-}
+} deriving (Show)
 
 instance FromJSON Track where
   parseJSON (Object v) = Track <$> v .: "name"
@@ -165,13 +186,14 @@ instance FromJSON Track where
                                <*> v .: "playCount"
                                <*> v .: "bigIcon"
 
-data Reason = Viewable | UserPreference | OrderedAlbum | TooFewSongs
+data Reason = Viewable | UserPreference | OrderedAlbum | TooFewSongs deriving (Show)
 
-parseReason :: Int -> Reason
-parseReason 0 = Viewable
-parseReason 1 = UserPreference
-parseReason 2 = OrderedAlbum
-parseReason 3 = TooFewSongs
+instance FromJSON Reason where
+  parseJSON (Number n)
+      | n == 0 = return Viewable
+      | n == 1 = return UserPreference
+      | n == 2 = return OrderedAlbum
+      | n == 3 = return TooFewSongs
 
 data Playlist = Playlist {
               plName :: String,
@@ -195,7 +217,7 @@ data Playlist = Playlist {
               isPublished :: Maybe Bool,
               plTrackKeys :: Maybe [String],
               reasonNotViewable :: Maybe Reason
-}
+} deriving (Show)
 
 instance FromJSON Playlist where
   parseJSON (Object v) = Playlist <$> v .: "name"
@@ -220,7 +242,10 @@ instance FromJSON Playlist where
                                   <*> v .: "trackKeys"
                                   <*> v .: "reasonNotViewable"
 
-data Gender = Male | Female
+data Gender = Male | Female deriving (Show)
+
+instance FromJSON Gender where
+  parseJSON (String s) = return (if s == "m" then Male else Female)
 
 data User = User {
               userKey :: String,
@@ -249,7 +274,7 @@ data User = User {
               displayName :: String,
               isUnlimited :: Bool,
               isSubscriber :: Bool
-}
+} deriving (Show)
 
 instance FromJSON User where
   parseJSON (Object v) = User <$> v .: "key"
@@ -280,40 +305,41 @@ instance FromJSON User where
                               <*> v .: "isSubscriber"
 
 data CollectionAlbum = CollectionAlbum {
-                        colName :: String,
-                        colIcon :: String,
-                        colBaseIcon :: String,
-                        colUrl :: String,
-                        colArtist :: String,
-                        colArtistUrl :: String,
-                        colIsExplicit :: Bool,
-                        colIsClean :: Bool,
-                        colLength :: Int,
-                        colArtistKey :: String,
-                        colTrackKeys :: [String],
-                        colPrice :: Int,
-                        colCanStream :: Bool,
-                        colCanSample :: Bool,
-                        colCanTether :: Bool,
-                        colShortUrl :: String,
-                        colEmbedUrl :: String,
-                        colDisplayDate :: String,
-                        colKey :: String,
-                        colReleaseDate :: String,
-                        colDuration :: Int,
-                        colUserKey :: String,
-                        colUserName :: String,
-                        colAlbumKey :: String,
-                        colAlbumUrl :: String,
-                        colCollectionUrl :: String,
-                        colItemTrackKeys :: [String],
-                        colIframeUrl :: Maybe String,
-                        colIsCompilation :: Maybe Bool,
-                        colLabel :: Maybe String,
-                        colReleaseDateISO :: Maybe String,
-                        colUpcs :: [String],
-                        colBigIcon :: String
-}
+                          colName :: String,
+                          colIcon :: String,
+                          colBaseIcon :: String,
+                          colUrl :: String,
+                          colArtist :: String,
+                          colAlbumArtistUrl :: String,
+                          colIsExplicit :: Bool,
+                          colIsClean :: Bool,
+                          colLength :: Int,
+                          colAlbumArtistKey :: String,
+                          colTrackKeys :: [String],
+                          colPrice :: Int,
+                          colCanStream :: Bool,
+                          colCanSample :: Bool,
+                          colCanTether :: Bool,
+                          colShortUrl :: String,
+                          colEmbedUrl :: String,
+                          colDisplayDate :: String,
+                          colKey :: String,
+                          colReleaseDate :: String,
+                          colDuration :: Int,
+                          colUserKey :: String,
+                          colUserName :: String,
+                          colAlbumKey :: String,
+                          colAlbumUrl :: String,
+                          colCollectionUrl :: String,
+                          colItemTrackKeys :: [String],
+                          colIframeUrl :: Maybe String,
+                          colUserGender :: Maybe Gender,
+                          colIsCompilation :: Maybe Bool,
+                          colLabel :: Maybe String,
+                          colReleaseDateISO :: Maybe String,
+                          colUpcs :: [String],
+                          colBigIcon :: String
+} deriving (Show)
 
 instance FromJSON CollectionAlbum where
   parseJSON (Object v) = CollectionAlbum <$> v .: "name"
@@ -369,7 +395,7 @@ data CollectionArtist = CollectionArtist {
                           colArtistCollectionUrl :: String,
                           colCount :: Maybe Int,
                           colAlbumCount :: Maybe Int
-}
+} deriving (Show)
 
 instance FromJSON CollectionArtist where
   parseJSON (Object v) = CollectionArtist <$> v .: "name"
@@ -404,7 +430,7 @@ data LabelStation = LabelStation {
                       lsRadioKey :: String,
                       lsReloadOnRepeat :: Bool,
                       lsTrackKeys :: Maybe [String]
-}
+} deriving (Show)
 
 instance FromJSON LabelStation where
   parseJSON (Object v) = LabelStation <$> v .: "count"
@@ -414,6 +440,7 @@ instance FromJSON LabelStation where
                                       <*> v .: "tracks"
                                       <*> v .: "labelUrl"
                                       <*> v .: "shortUrl"
+                                      <*> v .: "length"
                                       <*> v .: "url"
                                       <*> v .: "key"
                                       <*> v .: "radioKey"
@@ -438,7 +465,7 @@ data ArtistStation = ArtistStation {
                        asLength :: Int,
                        asAlbumCount :: Maybe Int,
                        asTrackKeys :: Maybe [String]
-}
+} deriving (Show)
 
 instance FromJSON ArtistStation where
   parseJSON (Object v) = ArtistStation <$> v .: "radioKey"
@@ -470,7 +497,7 @@ data HeavyRotationStation = HeavyRotationStation {
                               hrsIcon :: String,
                               hrsName :: String,
                               hrsTrackKeys :: Maybe [String]
-}
+} deriving (Show)
 
 instance FromJSON HeavyRotationStation where
   parseJSON (Object v) = HeavyRotationStation <$> v .: "key"
@@ -495,7 +522,7 @@ data HeavyRotationUserStation = HeavyRotationUserStation {
                                   hrusIcon :: String,
                                   hrusName :: String,
                                   hrusTrackKeys :: Maybe [String]
-}
+} deriving (Show)
 
 instance FromJSON HeavyRotationUserStation where
   parseJSON (Object v) = HeavyRotationUserStation <$> v .: "key"
@@ -527,7 +554,7 @@ data ArtistTopSongsStation = ArtistTopSongsStation {
                                atssLength :: Int,
                                atssAlbumCount :: Maybe Int,
                                atssTrackKeys :: Maybe [String]
-}
+} deriving (Show)
 
 instance FromJSON ArtistTopSongsStation where
   parseJSON (Object v) = ArtistTopSongsStation <$> v .: "radioKey"
@@ -560,4 +587,4 @@ data UserCollectionStation = UserCollectionStation {
                                ucsName :: String,
                                ucsUrl :: String,
                                ucsTrackKeys :: Maybe [String]
-}
+} deriving (Show)
