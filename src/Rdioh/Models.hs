@@ -588,3 +588,16 @@ data UserCollectionStation = UserCollectionStation {
                                ucsUrl :: String,
                                ucsTrackKeys :: Maybe [String]
 } deriving (Show)
+
+instance FromJSON UserCollectionStation where
+  parseJSON (Object v) = UserCollectionStation <$> v .: "key"
+                                               <*> v .: "length"
+                                               <*> v .: "tracks"
+                                               <*> v .: "reloadOnRepeat"
+                                               <*> v .: "count"
+                                               <*> v .: "user"
+                                               <*> v .: "baseIcon"
+                                               <*> v .: "icon"
+                                               <*> v .: "name"
+                                               <*> v .: "url"
+                                               <*> v .:? "trackKeys"
