@@ -28,7 +28,7 @@ type Rdioh a = ReaderT Token IO a
 
 -- uses the Reader monad to get a token. Then uses that token
 -- to make a request to the service url.
-runRequest :: (Show v, FromJSON v) => [(String, String)] -> Rdioh (Either String [v])
+runRequest :: (Show v, FromJSON v) => [(String, String)] -> Rdioh (Either String v)
 runRequest params = do
     tok <- ask
     let request = srvUrl . B.pack . toParams $ params
@@ -42,7 +42,7 @@ runRequest params = do
 
 -- RDIO methods
 
--- CORE methods
+-- CORE methods TODO they all have multiple return types.
 -- get keys extras options = runRequest $ [("method", "get"), ("keys", U.join "," keys)] ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)]) ++ (addMaybe options [("options", jsonify_tuples $ fromJust options)])
 
 -- getObjectFromShortCode short_code extras = runRequest $ [("method", "getObjectFromShortCode"), ("short_code", short_code)] ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)])
@@ -85,15 +85,17 @@ getArtistsForLabel' label extras start count =
                    <+> ("start", start)
                    <+> ("count", count)
 
-searchForArtist :: String -> Rdioh (Either String [Object])
+searchForArtist :: String -> Rdioh (Either String [Artist])
 searchForArtist query = searchForArtist' query Nothing [] Nothing Nothing
 
-searchForArtist' :: String -> Maybe Bool -> [ArtistExtra] -> Maybe Int -> Maybe Int -> Rdioh (Either String [Object])
-searchForArtist' query never_or extras start count = 
-    runRequest $ [("method", "search"), ("query", query), ("types", "Artist"), mkExtras extras]
+searchForArtist' :: String -> Maybe Bool -> [ArtistExtra] -> Maybe Int -> Maybe Int -> Rdioh (Either String [Artist])
+searchForArtist' query never_or extras start count = do
+    res <- runRequest $ [("method", "search"), ("query", query), ("types", "Artist"), mkExtras extras]
                    <+> ("never_or", never_or)
                    <+> ("start", start)
                    <+> ("count", count)
+
+    return (results <$> res)
 
 -- getTracksByISRC isrc extras = runRequest $ [("method", "getTracksByISRC"), ("isrc", isrc)] ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)])
 

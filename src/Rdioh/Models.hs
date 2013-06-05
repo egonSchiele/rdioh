@@ -84,8 +84,8 @@ data Artist = Artist {
             artistBaseIcon :: String,
             hasRadio :: Bool,
             artistShortUrl :: String,
-            radioKey :: String,
-            topSongsKey :: String,
+            radioKey :: Maybe String,
+            topSongsKey :: Maybe String,
             artistAlbumCount :: Maybe Int
 } deriving (Show)
 
@@ -98,11 +98,9 @@ instance FromJSON Artist where
                                 <*> v .: "baseIcon"
                                 <*> v .: "hasRadio"
                                 <*> v .: "shortUrl"
-                                <*> v .: "radioKey"
-                                <*> v .: "topSongsKey"
+                                <*> v .:? "radioKey"
+                                <*> v .:? "topSongsKey"
                                 <*> v .:? "albumCount"
-                                
-                                
 
 data Label = Label {
            labelName :: String,
@@ -604,9 +602,16 @@ instance FromJSON UserCollectionStation where
 
 data RdioResponse v = RdioResponse {
                       rdioStatus :: String,
-                      rdioResult :: [v]
+                      rdioResult :: v
 } deriving (Show)
 
 instance FromJSON a => FromJSON (RdioResponse a) where
   parseJSON (Object v) = RdioResponse <$> v .: "status"
                                       <*> v .: "result"
+
+data SearchResults v = SearchResults {
+                      results :: [v]
+} deriving (Show)
+
+instance FromJSON a => FromJSON (SearchResults a) where
+  parseJSON (Object v) = SearchResults <$> v .: "results"
