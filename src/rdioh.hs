@@ -21,19 +21,19 @@ import Data.Aeson
 import Data.Map
 import qualified Debug.Trace as D
 
-runRdioh :: String -> String -> Rdioh a -> IO a
-runRdioh key secret func = runReaderT func (twoLegToken key secret)
+runRdio :: String -> String -> Rdio a -> IO a
+runRdio key secret func = runReaderT func (twoLegToken key secret)
 
-runRdioh3 :: String -> String -> Rdioh a -> IO a
-runRdioh3 key secret func = do
+runRdioWithAuth :: String -> String -> Rdio a -> IO a
+runRdioWithAuth key secret func = do
     tok <- liftIO (threeLegToken key secret)
     runReaderT func tok
 
-type Rdioh a = ReaderT Token IO a
+type Rdio a = ReaderT Token IO a
 
 -- uses the Reader monad to get a token. Then uses that token
 -- to make a request to the service url.
-runRequest :: (Show v, FromJSON v) => [(String, String)] -> Rdioh (Either String v)
+runRequest :: (Show v, FromJSON v) => [(String, String)] -> Rdio (Either String v)
 runRequest params = do
     tok <- ask
     let request = srvUrl . B.pack . toParams $ params
@@ -59,44 +59,44 @@ runRequest params = do
 mkExtras :: Show e => [e] -> (String, String)
 mkExtras extras = ("extras", U.join "," $ show <$> extras)
 
-getAlbumsByUPC :: String -> [AlbumExtra] -> Rdioh (Either String [Album])
+getAlbumsByUPC :: String -> [AlbumExtra] -> Rdio (Either String [Album])
 getAlbumsByUPC upc extras = runRequest $ [("method", "getAlbumsByUPC"), ("upc", upc), mkExtras extras]
 
-getAlbumsForArtist :: String -> Rdioh (Either String [Album])
+getAlbumsForArtist :: String -> Rdio (Either String [Album])
 getAlbumsForArtist artist = getAlbumsForArtist' artist Nothing [] Nothing Nothing
 
-getAlbumsForArtist' :: String -> Maybe Bool -> [AlbumExtra] -> Maybe Int -> Maybe Int -> Rdioh (Either String [Album])
+getAlbumsForArtist' :: String -> Maybe Bool -> [AlbumExtra] -> Maybe Int -> Maybe Int -> Rdio (Either String [Album])
 getAlbumsForArtist' artist featuring extras start count =
     runRequest $ [("method", "getAlbumsForArtist"), ("artist", artist), mkExtras extras]
                    <+> ("featuring", featuring)
                    <+> ("start", start)
                    <+> ("count", count)
 
-getAlbumsForLabel :: String -> Rdioh (Either String [Album])
+getAlbumsForLabel :: String -> Rdio (Either String [Album])
 getAlbumsForLabel label = getAlbumsForLabel' label [] Nothing Nothing
 
-getAlbumsForLabel' :: String -> [AlbumExtra] -> Maybe Int -> Maybe Int -> Rdioh (Either String [Album])
+getAlbumsForLabel' :: String -> [AlbumExtra] -> Maybe Int -> Maybe Int -> Rdio (Either String [Album])
 getAlbumsForLabel' label extras start count = 
     runRequest $ [("method", "getAlbumsForLabel"), ("label", label), mkExtras extras]
                    <+> ("start", start)
                    <+> ("count", count)
 
-getArtistsForLabel :: String -> Rdioh (Either String [Artist])
+getArtistsForLabel :: String -> Rdio (Either String [Artist])
 getArtistsForLabel label = getArtistsForLabel' label [] Nothing Nothing
 
-getArtistsForLabel' :: String -> [ArtistExtra] -> Maybe Int -> Maybe Int -> Rdioh (Either String [Artist])
+getArtistsForLabel' :: String -> [ArtistExtra] -> Maybe Int -> Maybe Int -> Rdio (Either String [Artist])
 getArtistsForLabel' label extras start count = 
     runRequest $ [("method", "getArtistsForLabel"), ("label", label), mkExtras extras]
                    <+> ("start", start)
                    <+> ("count", count)
 
-getTracksByISRC :: String -> [TrackExtra] -> Rdioh (Either String [Track])
+getTracksByISRC :: String -> [TrackExtra] -> Rdio (Either String [Track])
 getTracksByISRC isrc extras = runRequest $ [("method", "getTracksByISRC"), ("isrc", isrc), mkExtras extras]
 
-getTracksForArtist :: String -> Rdioh (Either String [Track])
+getTracksForArtist :: String -> Rdio (Either String [Track])
 getTracksForArtist artist = getTracksForArtist' artist Nothing [] Nothing Nothing
 
-getTracksForArtist' :: String -> Maybe Bool -> [TrackExtra] -> Maybe Int -> Maybe Int -> Rdioh (Either String [Track])
+getTracksForArtist' :: String -> Maybe Bool -> [TrackExtra] -> Maybe Int -> Maybe Int -> Rdio (Either String [Track])
 getTracksForArtist' artist appears_on extras start count =
     runRequest $ [("method", "getTracksForArtist"), ("artist", artist), mkExtras extras]
                     <+> ("appears_on", appears_on)
@@ -105,10 +105,10 @@ getTracksForArtist' artist appears_on extras start count =
 
 -- TODO implement search for everything else...maybe generate this
 -- programmatically?
-searchForArtist :: String -> Rdioh (Either String [Artist])
+searchForArtist :: String -> Rdio (Either String [Artist])
 searchForArtist query = searchForArtist' query Nothing [] Nothing Nothing
 
-searchForArtist' :: String -> Maybe Bool -> [ArtistExtra] -> Maybe Int -> Maybe Int -> Rdioh (Either String [Artist])
+searchForArtist' :: String -> Maybe Bool -> [ArtistExtra] -> Maybe Int -> Maybe Int -> Rdio (Either String [Artist])
 searchForArtist' query never_or extras start count = do
     res <- runRequest $ [("method", "search"), ("query", query), ("types", "Artist"), mkExtras extras]
                    <+> ("never_or", never_or)
@@ -119,18 +119,18 @@ searchForArtist' query never_or extras start count = do
 
 -- TODO searchSuggestions
 
-addToCollection :: [String] -> Rdioh (Either String Object)
+addToCollection :: [String] -> Rdio (Either String Object)
 addToCollection keys = runRequest $ [("method", "addToCollection"), ("keys", U.join "," keys)]
 
-getAlbumsForArtistInCollection :: String -> Rdioh (Either String [Albums])
+getAlbumsForArtistInCollection :: String -> Rdio (Either String [Albums])
 getAlbumsForArtistInCollection artist = getAlbumsForArtistInCollection' artist Nothing [] Nothing
 
 getAlbumsForArtistInCollection' :: String -> Maybe String -> [AlbumExtra] -> SortOrder
 
-getOfflineTracks :: Rdioh (Either String [Track])
+getOfflineTracks :: Rdio (Either String [Track])
 getOfflineTracks = getOfflineTracks' Nothing Nothing []
 
-getOfflineTracks' :: Maybe Int -> Maybe Int -> [TrackExtra] -> Rdioh (Either String [Track])
+getOfflineTracks' :: Maybe Int -> Maybe Int -> [TrackExtra] -> Rdio (Either String [Track])
 getOfflineTracks' start count extras = 
     runRequest $ [("method", "getOfflineTracks"), mkExtras extras]
                   <+> ("start", start)
