@@ -64,11 +64,11 @@ instance FromJSON Album where
                                <*> v .: "key"
                                <*> v .: "releaseDate"
                                <*> v .: "duration"
-                               <*> v .: "iframeUrl"
-                               <*> v .: "isCompilation"
-                               <*> v .: "label"
-                               <*> v .: "bigIcon"
-                               <*> v .: "releaseDateISO"
+                               <*> v .:? "iframeUrl"
+                               <*> v .:? "isCompilation"
+                               <*> v .:? "label"
+                               <*> v .:? "bigIcon"
+                               <*> v .:? "releaseDateISO"
 
 data ArtistExtra = ArtistAlbumCount
 
@@ -100,7 +100,7 @@ instance FromJSON Artist where
                                 <*> v .: "shortUrl"
                                 <*> v .: "radioKey"
                                 <*> v .: "topSongsKey"
-                                <*> v .: "albumCount"
+                                <*> v .:? "albumCount"
                                 
                                 
 
@@ -179,12 +179,12 @@ instance FromJSON Track where
                                <*> v .: "key"
                                <*> v .: "icon"
                                <*> v .: "trackNum"
-                               <*> v .: "isInCollection"
-                               <*> v .: "isOnCompilation"
-                               <*> v .: "isrcs"
-                               <*> v .: "iframeUrl"
-                               <*> v .: "playCount"
-                               <*> v .: "bigIcon"
+                               <*> v .:? "isInCollection"
+                               <*> v .:? "isOnCompilation"
+                               <*> v .:? "isrcs"
+                               <*> v .:? "iframeUrl"
+                               <*> v .:? "playCount"
+                               <*> v .:? "bigIcon"
 
 data Reason = Viewable | UserPreference | OrderedAlbum | TooFewSongs deriving (Show)
 
@@ -233,14 +233,14 @@ instance FromJSON Playlist where
                                   <*> v .: "shortUrl"
                                   <*> v .: "embedUrl"
                                   <*> v .: "key"
-                                  <*> v .: "iframeUrl"
-                                  <*> v .: "isViewable"
-                                  <*> v .: "bigIcon"
-                                  <*> v .: "description"
-                                  <*> v .: "tracks"
-                                  <*> v .: "isPublished"
-                                  <*> v .: "trackKeys"
-                                  <*> v .: "reasonNotViewable"
+                                  <*> v .:? "iframeUrl"
+                                  <*> v .:? "isViewable"
+                                  <*> v .:? "bigIcon"
+                                  <*> v .:? "description"
+                                  <*> v .:? "tracks"
+                                  <*> v .:? "isPublished"
+                                  <*> v .:? "trackKeys"
+                                  <*> v .:? "reasonNotViewable"
 
 data Gender = Male | Female deriving (Show)
 
@@ -256,24 +256,24 @@ data User = User {
               libraryVersion :: String,
               userUrl :: String,
               gender :: Gender,
-              followingUrl :: String,
-              isTrial :: Bool,
-              artistCount :: Int,
-              lastSongPlayed :: String,
-              heavyRotationKey :: String,
-              networkHeavyRotationKey :: String,
-              albumCount :: Int,
-              trackCount :: Int,
-              lastSongPlayTime :: String,
-              username :: String,
-              reviewCount :: Int,
-              collectionUrl :: String,
-              playlistsUrl :: String,
-              collectionKey :: String,
-              followersUrl :: String,
-              displayName :: String,
-              isUnlimited :: Bool,
-              isSubscriber :: Bool
+              followingUrl :: Maybe String,
+              isTrial :: Maybe Bool,
+              artistCount :: Maybe Int,
+              lastSongPlayed :: Maybe String,
+              heavyRotationKey :: Maybe String,
+              networkHeavyRotationKey :: Maybe String,
+              albumCount :: Maybe Int,
+              trackCount :: Maybe Int,
+              lastSongPlayTime :: Maybe String,
+              username :: Maybe String,
+              reviewCount :: Maybe Int,
+              collectionUrl :: Maybe String,
+              playlistsUrl :: Maybe String,
+              collectionKey :: Maybe String,
+              followersUrl :: Maybe String,
+              displayName :: Maybe String,
+              isUnlimited :: Maybe Bool,
+              isSubscriber :: Maybe Bool
 } deriving (Show)
 
 instance FromJSON User where
@@ -285,24 +285,24 @@ instance FromJSON User where
                               <*> v .: "libraryVersion"
                               <*> v .: "url"
                               <*> v .: "gender"
-                              <*> v .: "followingUrl"
-                              <*> v .: "isTrial"
-                              <*> v .: "artistCount"
-                              <*> v .: "lastSongPlayed"
-                              <*> v .: "heavyRotationKey"
-                              <*> v .: "networkHeavyRotationKey"
-                              <*> v .: "albumCount"
-                              <*> v .: "trackCount"
-                              <*> v .: "lastSongPlayTime"
-                              <*> v .: "username"
-                              <*> v .: "reviewCount"
-                              <*> v .: "collectionUrl"
-                              <*> v .: "playlistsUrl"
-                              <*> v .: "collectionKey"
-                              <*> v .: "followersUrl"
-                              <*> v .: "displayName"
-                              <*> v .: "isUnlimited"
-                              <*> v .: "isSubscriber"
+                              <*> v .:? "followingUrl"
+                              <*> v .:? "isTrial"
+                              <*> v .:? "artistCount"
+                              <*> v .:? "lastSongPlayed"
+                              <*> v .:? "heavyRotationKey"
+                              <*> v .:? "networkHeavyRotationKey"
+                              <*> v .:? "albumCount"
+                              <*> v .:? "trackCount"
+                              <*> v .:? "lastSongPlayTime"
+                              <*> v .:? "username"
+                              <*> v .:? "reviewCount"
+                              <*> v .:? "collectionUrl"
+                              <*> v .:? "playlistsUrl"
+                              <*> v .:? "collectionKey"
+                              <*> v .:? "followersUrl"
+                              <*> v .:? "displayName"
+                              <*> v .:? "isUnlimited"
+                              <*> v .:? "isSubscriber"
 
 data CollectionAlbum = CollectionAlbum {
                           colName :: String,
@@ -369,13 +369,13 @@ instance FromJSON CollectionAlbum where
                                          <*> v .: "albumUrl"
                                          <*> v .: "collectionUrl"
                                          <*> v .: "itemTrackKeys"
-                                         <*> v .: "iframeUrl"
-                                         <*> v .: "userGender"
-                                         <*> v .: "isCompilation"
-                                         <*> v .: "label"
-                                         <*> v .: "releaseDateISO"
-                                         <*> v .: "upcs"
-                                         <*> v .: "bigIcon"
+                                         <*> v .:? "iframeUrl"
+                                         <*> v .:? "userGender"
+                                         <*> v .:? "isCompilation"
+                                         <*> v .:? "label"
+                                         <*> v .:? "releaseDateISO"
+                                         <*> v .:? "upcs"
+                                         <*> v .:? "bigIcon"
 
 data CollectionArtist = CollectionArtist {
                           colArtistName :: String,
@@ -413,8 +413,8 @@ instance FromJSON CollectionArtist where
                                           <*> v .: "artistKey"
                                           <*> v .: "artistUrl"
                                           <*> v .: "collectionUrl"
-                                          <*> v .: "count"
-                                          <*> v .: "albumCount"
+                                          <*> v .:? "count"
+                                          <*> v .:? "albumCount"
 
 data LabelStation = LabelStation {
                       lsCount :: Int,
@@ -445,7 +445,7 @@ instance FromJSON LabelStation where
                                       <*> v .: "key"
                                       <*> v .: "radioKey"
                                       <*> v .: "reloadOnRepeat"
-                                      <*> v .: "trackKeys"
+                                      <*> v .:? "trackKeys"
 
 data ArtistStation = ArtistStation {
                        asRadioKey :: String,
@@ -483,8 +483,8 @@ instance FromJSON ArtistStation where
                                        <*> v .: "artistName"
                                        <*> v .: "shortUrl"
                                        <*> v .: "length"
-                                       <*> v .: "albumCount"
-                                       <*> v .: "trackKeys"
+                                       <*> v .:? "albumCount"
+                                       <*> v .:? "trackKeys"
 
 data HeavyRotationStation = HeavyRotationStation {
                               hrsKey :: String,
@@ -509,7 +509,7 @@ instance FromJSON HeavyRotationStation where
                                               <*> v .: "baseIcon"
                                               <*> v .: "icon"
                                               <*> v .: "name"
-                                              <*> v .: "trackKeys"
+                                              <*> v .:? "trackKeys"
 
 data HeavyRotationUserStation = HeavyRotationUserStation {
                                   hrusKey :: String,
@@ -534,7 +534,7 @@ instance FromJSON HeavyRotationUserStation where
                                                   <*> v .: "baseIcon"
                                                   <*> v .: "icon"
                                                   <*> v .: "name"
-                                                  <*> v .: "trackKeys"
+                                                  <*> v .:? "trackKeys"
 
 data ArtistTopSongsStation = ArtistTopSongsStation {
                                atssRadioKey :: String,
@@ -572,8 +572,8 @@ instance FromJSON ArtistTopSongsStation where
                                                <*> v .: "artistName"
                                                <*> v .: "shortUrl"
                                                <*> v .: "length"
-                                               <*> v .: "albumCount"
-                                               <*> v .: "trackKeys"
+                                               <*> v .:? "albumCount"
+                                               <*> v .:? "trackKeys"
 
 data UserCollectionStation = UserCollectionStation {
                                ucsKey :: String,
