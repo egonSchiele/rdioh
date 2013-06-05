@@ -21,8 +21,13 @@ import Data.Aeson
 import Data.Map
 import qualified Debug.Trace as D
 
--- rdioh :: String -> String -> ReaderT r a -> IO a
+runRdioh :: String -> String -> Rdioh a -> IO a
 runRdioh key secret func = runReaderT func (twoLegToken key secret)
+
+runRdioh3 :: String -> String -> Rdioh a -> IO a
+runRdioh3 key secret func = do
+    tok <- liftIO (threeLegToken key secret)
+    runReaderT func tok
 
 type Rdioh a = ReaderT Token IO a
 
@@ -113,6 +118,16 @@ searchForArtist' query never_or extras start count = do
     return (results <$> res)
 
 -- TODO searchSuggestions
+
+getOfflineTracks :: Rdioh (Either String [Track])
+getOfflineTracks = getOfflineTracks' Nothing Nothing []
+
+getOfflineTracks' :: Maybe Int -> Maybe Int -> [TrackExtra] -> Rdioh (Either String [Track])
+getOfflineTracks' start count extras = 
+    runRequest $ [("method", "getOfflineTracks"), mkExtras extras]
+                  <+> ("start", start)
+                  <+> ("count", count)
+
 
 -- getTracksByISRC isrc extras = runRequest $ [("method", "getTracksByISRC"), ("isrc", isrc)] ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)])
 
