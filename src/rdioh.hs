@@ -18,7 +18,8 @@ import Rdioh.Util
 import Rdioh.Models
 import Control.Applicative
 import Data.Aeson
-
+import Data.Map
+import qualified Debug.Trace as D
 
 -- rdioh :: String -> String -> ReaderT r a -> IO a
 runRdioh key secret func = runReaderT func (twoLegToken key secret)
@@ -29,15 +30,18 @@ type Rdioh a = ReaderT Token IO a
 -- to make a request to the service url. The returned response
 -- is parsed through extractResponse to return the result parsed
 -- from JSON to something else.
-runRequest :: FromJSON v => [(String, String)] -> Rdioh (Maybe v)
+runRequest :: (Show v, FromJSON v) => [(String, String)] -> Rdioh (Maybe [v])
 runRequest params = do
     tok <- ask
     let request = srvUrl . B.pack . toParams $ params
-    let response = runOAuthM tok $ do
+    response <- liftIO $ runOAuthM tok $ do
                       request_ <- signRq2 HMACSHA1 Nothing request
                       serviceRequest CurlClient request_
-    value <- liftIO $ decode . rspPayload <$> response
-    return value
+
+    D.trace (show . rspPayload $ response) (return ())
+    let value = decode . rspPayload $ response
+    D.trace (show value) (return ())
+    return $ rdioResult <$> value
     -- return $ serviceRequest CurlClient response
 
 {-
@@ -105,6 +109,16 @@ getArtistsForLabel label = getArtistsForLabel' label [] Nothing Nothing
 getArtistsForLabel' :: String -> [ArtistExtra] -> Maybe Int -> Maybe Int -> Rdioh (Maybe [Artist])
 getArtistsForLabel' label extras start count = 
     runRequest $ [("method", "getArtistsForLabel"), ("label", label), mkExtras extras]
+                   <+> ("start", start)
+                   <+> ("count", count)
+
+searchForArtist :: String -> Rdioh (Maybe [Object])
+searchForArtist query = searchForArtist' query Nothing [] Nothing Nothing
+
+searchForArtist' :: String -> Maybe Bool -> [ArtistExtra] -> Maybe Int -> Maybe Int -> Rdioh (Maybe [Object])
+searchForArtist' query never_or extras start count = 
+    runRequest $ [("method", "search"), ("query", query), ("types", "Artist"), mkExtras extras]
+                   <+> ("never_or", never_or)
                    <+> ("start", start)
                    <+> ("count", count)
 

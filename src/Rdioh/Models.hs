@@ -337,8 +337,8 @@ data CollectionAlbum = CollectionAlbum {
                           colIsCompilation :: Maybe Bool,
                           colLabel :: Maybe String,
                           colReleaseDateISO :: Maybe String,
-                          colUpcs :: [String],
-                          colBigIcon :: String
+                          colUpcs :: Maybe [String],
+                          colBigIcon :: Maybe String
 } deriving (Show)
 
 instance FromJSON CollectionAlbum where
@@ -601,3 +601,12 @@ instance FromJSON UserCollectionStation where
                                                <*> v .: "name"
                                                <*> v .: "url"
                                                <*> v .:? "trackKeys"
+
+data RdioResponse v = RdioResponse {
+                      rdioStatus :: String,
+                      rdioResult :: [v]
+} deriving (Show)
+
+instance FromJSON a => FromJSON (RdioResponse a) where
+  parseJSON (Object v) = RdioResponse <$> v .: "status"
+                                      <*> v .: "result"
