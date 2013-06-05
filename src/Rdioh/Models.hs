@@ -625,3 +625,9 @@ data SearchResults v = SearchResults {
 
 instance FromJSON a => FromJSON (SearchResults a) where
   parseJSON (Object v) = SearchResults <$> v .: "results"
+
+data SortOrder = SortByName | SortByReleaseDate
+
+instance Show SortOrder where
+    show SortByName = "name"
+    show SortByReleaseDate = "releaseDate"
