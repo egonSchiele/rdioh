@@ -2,7 +2,7 @@
 
 module Rdioh where
 import Rdioh.Auth
-import Data.Maybe 
+import Data.Either 
 import qualified Data.ByteString.Lazy.Char8 as B
 import qualified Data.List.Utils as U
 import Control.Monad.Reader
@@ -27,10 +27,8 @@ runRdioh key secret func = runReaderT func (twoLegToken key secret)
 type Rdioh a = ReaderT Token IO a
 
 -- uses the Reader monad to get a token. Then uses that token
--- to make a request to the service url. The returned response
--- is parsed through extractResponse to return the result parsed
--- from JSON to something else.
-runRequest :: (Show v, FromJSON v) => [(String, String)] -> Rdioh (Maybe [v])
+-- to make a request to the service url.
+runRequest :: (Show v, FromJSON v) => [(String, String)] -> Rdioh (Either String [v])
 runRequest params = do
     tok <- ask
     let request = srvUrl . B.pack . toParams $ params
@@ -38,34 +36,9 @@ runRequest params = do
                       request_ <- signRq2 HMACSHA1 Nothing request
                       serviceRequest CurlClient request_
 
-    D.trace (show . rspPayload $ response) (return ())
-    let value = decode . rspPayload $ response
-    D.trace (show value) (return ())
+    -- D.trace (show . rspPayload $ response) (return ())
+    let value = eitherDecode . rspPayload $ response
     return $ rdioResult <$> value
-    -- return $ serviceRequest CurlClient response
-
-{-
-runRequest params = do
-    tok <- ask
-    liftM extractResponse $ runOAuthM tok $ signRq2 HMACSHA1 Nothing (srvUrl (B.pack . toParams $ params)) >>= serviceRequest CurlClient
-
--- extracts just the response from whatever rdio returned
-extractResponse = toJSON . B.unpack . rspPayload
-
--}
--- extractResponse = toJSON . B.unpack . rspPayload
-
-
-
--- ADTs for RDIO
-
-data RdioScope = USER_SCOPE | FRIENDS_SCOPE | EVERYONE_SCOPE
-data RdioSort = DATE_ADDED_SORT | PLAY_COUNT_SORT | ARTIST_SORT | NAME_SORT
-data RdioObjectType = ARTISTS_OBJECT_TYPE | ALBUMS_OBJECT_TYPE
-data RdioTime = THIS_WEEK_TIME | LAST_WEEK_TIME | TWO_WEEKS_TIME
-data RdioResultType = ARTIST_RESULT_TYPE | ALBUM_RESULT_TYPE | TRACK_RESULT_TYPE | PLAYLIST_RESULT_TYPE
-data RdioType = ARTIST_TYPE | ALBUM_TYPE | TRACK_TYPE | PLAYLIST_TYPE | USER_TYPE
-data RdioCollaborationMode = NO_COLLABORATION | COLLABORATION_WITH_ALL | COLLABORATION_WITH_FOLLOWED
 
 -- RDIO methods
 
@@ -74,48 +47,48 @@ data RdioCollaborationMode = NO_COLLABORATION | COLLABORATION_WITH_ALL | COLLABO
 
 -- getObjectFromShortCode short_code extras = runRequest $ [("method", "getObjectFromShortCode"), ("short_code", short_code)] ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)])
 
--- getObjectFromUrl url extras = runRequest $ [("method", "getObjectFromUrl"), ("url", url)] ++  (addMaybe extras [("extras", U.join "," $ fromJust extras)])
+-- getObjectFromUrl url extras = runRequest $ [("method", "getObjectFromUrl"), ("url", url)] ++  (addEither extras [("extras", U.join "," $ fromJust extras)])
 
 -- CATALOG methods
 
 mkExtras :: Show e => [e] -> (String, String)
 mkExtras extras = ("extras", U.join "," $ show <$> extras)
 
-getAlbumsByUPC :: String -> [AlbumExtra] -> Rdioh (Maybe [Album])
+getAlbumsByUPC :: String -> [AlbumExtra] -> Rdioh (Either String [Album])
 getAlbumsByUPC upc extras = runRequest $ [("method", "getAlbumsByUPC"), ("upc", upc), mkExtras extras]
 
-getAlbumsForArtist :: String -> Rdioh (Maybe [Album])
+getAlbumsForArtist :: String -> Rdioh (Either String [Album])
 getAlbumsForArtist artist = getAlbumsForArtist' artist Nothing [] Nothing Nothing
 
-getAlbumsForArtist' :: String -> Maybe Bool -> [AlbumExtra] -> Maybe Int -> Maybe Int -> Rdioh (Maybe [Album])
+getAlbumsForArtist' :: String -> Maybe Bool -> [AlbumExtra] -> Maybe Int -> Maybe Int -> Rdioh (Either String [Album])
 getAlbumsForArtist' artist featuring extras start count =
     runRequest $ [("method", "getAlbumsForArtist"), ("artist", artist), mkExtras extras]
                    <+> ("featuring", featuring)
                    <+> ("start", start)
                    <+> ("count", count)
 
-getAlbumsForLabel :: String -> Rdioh (Maybe [Album])
+getAlbumsForLabel :: String -> Rdioh (Either String [Album])
 getAlbumsForLabel label = getAlbumsForLabel' label [] Nothing Nothing
 
-getAlbumsForLabel' :: String -> [AlbumExtra] -> Maybe Int -> Maybe Int -> Rdioh (Maybe [Album])
+getAlbumsForLabel' :: String -> [AlbumExtra] -> Maybe Int -> Maybe Int -> Rdioh (Either String [Album])
 getAlbumsForLabel' label extras start count = 
     runRequest $ [("method", "getAlbumsForLabel"), ("label", label), mkExtras extras]
                    <+> ("start", start)
                    <+> ("count", count)
 
-getArtistsForLabel :: String -> Rdioh (Maybe [Artist])
+getArtistsForLabel :: String -> Rdioh (Either String [Artist])
 getArtistsForLabel label = getArtistsForLabel' label [] Nothing Nothing
 
-getArtistsForLabel' :: String -> [ArtistExtra] -> Maybe Int -> Maybe Int -> Rdioh (Maybe [Artist])
+getArtistsForLabel' :: String -> [ArtistExtra] -> Maybe Int -> Maybe Int -> Rdioh (Either String [Artist])
 getArtistsForLabel' label extras start count = 
     runRequest $ [("method", "getArtistsForLabel"), ("label", label), mkExtras extras]
                    <+> ("start", start)
                    <+> ("count", count)
 
-searchForArtist :: String -> Rdioh (Maybe [Object])
+searchForArtist :: String -> Rdioh (Either String [Object])
 searchForArtist query = searchForArtist' query Nothing [] Nothing Nothing
 
-searchForArtist' :: String -> Maybe Bool -> [ArtistExtra] -> Maybe Int -> Maybe Int -> Rdioh (Maybe [Object])
+searchForArtist' :: String -> Maybe Bool -> [ArtistExtra] -> Maybe Int -> Maybe Int -> Rdioh (Either String [Object])
 searchForArtist' query never_or extras start count = 
     runRequest $ [("method", "search"), ("query", query), ("types", "Artist"), mkExtras extras]
                    <+> ("never_or", never_or)

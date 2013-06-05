@@ -25,7 +25,7 @@ data Album = Album {
                albumLength :: Int,
                albumArtistKey :: String,
                trackKeys :: [String],
-               price :: Int,
+               price :: String,
                canStream :: Bool,
                canSample :: Bool,
                canTether :: Bool,
