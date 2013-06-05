@@ -85,6 +85,21 @@ getArtistsForLabel' label extras start count =
                    <+> ("start", start)
                    <+> ("count", count)
 
+getTracksByISRC :: String -> [TrackExtra] -> Rdioh (Either String [Track])
+getTracksByISRC isrc extras = runRequest $ [("method", "getTracksByISRC"), ("isrc", isrc), mkExtras extras]
+
+getTracksForArtist :: String -> Rdioh (Either String [Track])
+getTracksForArtist artist = getTracksForArtist' artist Nothing [] Nothing Nothing
+
+getTracksForArtist' :: String -> Maybe Bool -> [TrackExtra] -> Maybe Int -> Maybe Int -> Rdioh (Either String [Track])
+getTracksForArtist' artist appears_on extras start count =
+    runRequest $ [("method", "getTracksForArtist"), ("artist", artist), mkExtras extras]
+                    <+> ("appears_on", appears_on)
+                    <+> ("start", start)
+                    <+> ("count", count)
+
+-- TODO implement search for everything else...maybe generate this
+-- programmatically?
 searchForArtist :: String -> Rdioh (Either String [Artist])
 searchForArtist query = searchForArtist' query Nothing [] Nothing Nothing
 
@@ -96,6 +111,8 @@ searchForArtist' query never_or extras start count = do
                    <+> ("count", count)
 
     return (results <$> res)
+
+-- TODO searchSuggestions
 
 -- getTracksByISRC isrc extras = runRequest $ [("method", "getTracksByISRC"), ("isrc", isrc)] ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)])
 

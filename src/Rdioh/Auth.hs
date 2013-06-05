@@ -7,6 +7,7 @@ import Network.OAuth.Http.CurlHttpClient
 import Network.OAuth.Http.PercentEncoding
 import Data.Maybe
 import Data.List
+import Control.Monad.IO.Class
 
 reqUrl = fromJust . parseURL $ "http://api.rdio.com/oauth/request_token"
 accUrl = fromJust . parseURL $ "http://api.rdio.com/oauth/access_token"
@@ -23,6 +24,7 @@ twoLegToken :: String -> String -> Token
 twoLegToken key secret = fromApplication (app key secret)
 
 -- given a key and a secret, does three-legged auth and returns an auth token
+threeLegToken :: MonadIO m => String -> String -> m Token
 threeLegToken key secret = runOAuthM (twoLegToken key secret) $ do
     signRq2 HMACSHA1 Nothing reqUrl >>= oauthRequest CurlClient
     cliAskAuthorization authUrl

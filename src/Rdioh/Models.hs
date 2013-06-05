@@ -119,6 +119,16 @@ instance FromJSON Label where
                                <*> v .: "hasRadio"
                                <*> v .: "radioKey"
 
+data TrackExtra = IsInCollection | IsOnCompilation | Isrcs | TrackIframeUrl | PlayCount | TrackBigIcon
+
+instance Show TrackExtra where
+    show IsInCollection = "isInCollection"
+    show IsOnCompilation = "isOnCompilation"
+    show Isrcs = "isrcs"
+    show TrackIframeUrl = "iframeUrl"
+    show PlayCount = "playCount"
+    show TrackBigIcon = "bigIcon"
+
 data Track = Track {
            trackName :: String,
            trackArtist :: String,

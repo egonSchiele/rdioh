@@ -13,14 +13,14 @@ description: This library implements methods for Rdio's API.
 			 It supports 2-legged and 3-legged OAuth.
 
 library
-  build-depends: base >= 3 && <= 5 , mtl , MissingH , bytestring , json , hoauth , urlencoded, aeson, containers
+  build-depends: base >= 3 && <= 5 , mtl , MissingH , bytestring , json , hoauth , urlencoded, aeson, containers, transformers
   exposed-modules: Rdioh, RdioResult
 
   hs-source-dirs: src
   extensions: FlexibleContexts
 
 executable rdioh
-  build-depends: base >= 3 && <= 5 , mtl , MissingH , bytestring , json , hoauth , urlencoded, aeson, containers
+  build-depends: base >= 3 && <= 5 , mtl , MissingH , bytestring , json , hoauth , urlencoded, aeson, containers, transformers
   hs-source-dirs: src
   main-is: Main.hs
 
