@@ -7,14 +7,14 @@ author: Aditya Bhargava
 maintainer: Aditya Bhargava <aditya at wefoundland.com>
 stability: experimental
 build-type: Simple
-cabal-version: >= 1.6
+cabal-version: >= 1.8
 synopsis: A Haskell wrapper for Rdio's API.
 description: This library implements methods for Rdio's API.
 			 It supports 2-legged and 3-legged OAuth.
 
 library
   build-depends: base >= 3 && <= 5 , mtl , MissingH , bytestring , json , hoauth , urlencoded, aeson, containers, transformers
-  exposed-modules: Rdioh, RdioResult
+  exposed-modules: Rdioh, Rdioh.Models
 
   hs-source-dirs: src
   extensions: FlexibleContexts
@@ -28,3 +28,7 @@ source-repository head
   type:     git
   location: git@github.com:egonSchiele/rdioh.git
 
+executable rdioh-spec
+  build-depends:       base ==4.5.*, hspec, rdioh
+  hs-source-dirs:      spec, src
+  main-is:             Main.hs

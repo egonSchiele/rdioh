@@ -6,7 +6,6 @@ import Data.Either
 import qualified Data.ByteString.Lazy.Char8 as B
 import qualified Data.List.Utils as U
 import Control.Monad.Reader
-import RdioResult
 
 import Network.OAuth.Consumer
 import Network.OAuth.Http.Request

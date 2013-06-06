@@ -272,7 +272,7 @@ instance FromJSON Playlist where
 
 data Gender = Male | Female deriving (Show)
 
-data UserPlaylists = {
+data UserPlaylists = UserPlaylists {
                    upOwned :: [Playlist],
                    upCollab :: [Playlist],
                    upSubscribed :: [Playlist]
@@ -705,21 +705,21 @@ instance FromJSON Activity where
   parseJSON (Object v) = Activity <$> v .: "user"
                                   <*> v .: "updates"
 
-data UpdateType = uTrackAddedToCollection | uTrackAddedToPlaylist | uFriendAdded | uUserJoined | uCommentOnTrack | uCommentOnAlbum | uCommentOnArtist | uCommentOnPlaylist | uTrackAddedViaMatchCollection | uUserSubscribed | uTrackSynced deriving (Show)
+data UpdateType = UTrackAddedToCollection | UTrackAddedToPlaylist | UFriendAdded | UUserJoined | UCommentOnTrack | UCommentOnAlbum | UCommentOnArtist | UCommentOnPlaylist | UTrackAddedViaMatchCollection | UUserSubscribed | UTrackSynced deriving (Show)
 
 instance FromJSON UpdateType where
   parseJSON (Number n)
-      | n == 0 = return uTrackAddedToCollection
-      | n == 1 = return uTrackAddedToPlaylist
-      | n == 3 = return uFriendAdded
-      | n == 5 = return uUserJoined
-      | n == 6 = return uCommentOnTrack
-      | n == 7 = return uCommentOnAlbum
-      | n == 8 = return uCommentOnArtist
-      | n == 9 = return uCommentOnPlaylist
-      | n == 10 = return uTrackAddedViaMatchCollection
-      | n == 11 = return uUserSubscribed
-      | n == 12 = return uTrackSynced
+      | n == 0 = return UTrackAddedToCollection
+      | n == 1 = return UTrackAddedToPlaylist
+      | n == 3 = return UFriendAdded
+      | n == 5 = return UUserJoined
+      | n == 6 = return UCommentOnTrack
+      | n == 7 = return UCommentOnAlbum
+      | n == 8 = return UCommentOnArtist
+      | n == 9 = return UCommentOnPlaylist
+      | n == 10 = return UTrackAddedViaMatchCollection
+      | n == 11 = return UUserSubscribed
+      | n == 12 = return UTrackSynced
     
 data Update = Update {
                 owner :: User,
