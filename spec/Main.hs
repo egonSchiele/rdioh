@@ -16,42 +16,48 @@ testMethod meth = unsafePerformIO $ do
       Left err -> fail err
       Right x -> return True
 
+radiohead = "r91318"
+me = "s361565"
+emi = "l202397"
+
+okcomputer = "a171828"
+
 main = hspec $ do
   describe "test methods" $ do
     it "getAlbumsByUPC" $ do
       testMethod $ getAlbumsByUPC 654979031628 []
     it "getAlbumsForArtist" $ do
-      testMethod $ getAlbumsForArtist "r91318" -- Radiohead
+      testMethod $ getAlbumsForArtist radiohead
     it "getAlbumsForLabel" $ do
-      testMethod $ getAlbumsForLabel "l202397"
+      testMethod $ getAlbumsForLabel emi
     it "getArtistsForLabel" $ do
-      testMethod $ getArtistsForLabel "l202397"
+      testMethod $ getArtistsForLabel emi
     it "getTracksByISRC" $ do
       testMethod $ getTracksByISRC "" []
     it "getTracksForArtist" $ do
-      testMethod $ getTracksForArtist "r91318"
+      testMethod $ getTracksForArtist radiohead
     it "search" $ do
       testMethod $ (search "Radiohead" "Artist" :: Rdio (Either String [Label]))
-    it "getAlbumsForArtistInCollection" $ do
-      testMethod $ getAlbumsForArtistInCollection ""
+    it "getAlbumsForArtistInCollection'" $ do
+      testMethod $ getAlbumsForArtistInCollection' radiohead (Just me) [] Nothing -- me
     it "getAlbumsInCollection'" $ do
-      testMethod $ getAlbumsInCollection' (Just "") Nothing Nothing Nothing Nothing []
+      testMethod $ getAlbumsInCollection' (Just me) Nothing Nothing Nothing Nothing []
     it "getArtistsInCollection'" $ do
-      testMethod $ getArtistsInCollection' (Just "") Nothing Nothing Nothing Nothing []
-    it "getTracksForAlbumInCollection" $ do
-      testMethod $ getTracksForAlbumInCollection ""
-    it "getTracksForArtistInCollection" $ do
-      testMethod $ getTracksForArtistInCollection ""
+      testMethod $ getArtistsInCollection' (Just me) Nothing Nothing Nothing Nothing []
+    it "getTracksForAlbumInCollection'" $ do
+      testMethod $ getTracksForAlbumInCollection' okcomputer (Just me) []
+    it "getTracksForArtistInCollection'" $ do
+      testMethod $ getTracksForArtistInCollection' radiohead (Just me) []
     it "getTracksInCollection'" $ do
-      testMethod $ getTracksInCollection' (Just "") Nothing Nothing Nothing Nothing []
+      testMethod $ getTracksInCollection' (Just me) Nothing Nothing Nothing Nothing []
     it "getPlaylists'" $ do
-      testMethod $ getPlaylists' (Just "") [] Nothing
+      testMethod $ getPlaylists' (Just me) [] Nothing
     it "getUserPlaylists" $ do
-      testMethod $ getUserPlaylists ""
+      testMethod $ getUserPlaylists me
     it "findUserByEmail" $ do
-      testMethod $ findUserByEmail "" []
+      testMethod $ findUserByEmail "bluemangroupie@gmail.com" []
     it "findUserByName" $ do
-      testMethod $ findUserByName "" []
+      testMethod $ findUserByName "egonschiele" []
     it "getNewReleases" $ do
       testMethod $ getNewReleases
     it "getTopChartArtists" $ do
