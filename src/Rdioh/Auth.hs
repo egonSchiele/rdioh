@@ -19,11 +19,12 @@ srvUrl payload = (fromJust . parseURL $ "http://api.rdio.com/1/") { method = POS
 
 app key secret = Application key secret OOB
 
--- | Takes: a key and a secret. Returns a two-legged auth token
+-- | Takes: a key and a secret. Returns a two-legged auth token. You can
+-- just use @runRdio@ in most cases.
 twoLegToken :: String -> String -> Token
 twoLegToken key secret = fromApplication (app key secret)
 
--- | Takes: a key and a secret. Does three-legged auth and returns an auth token.
+-- | Takes: a key and a secret. Does three-legged auth and returns an auth token. You can just use @runRdioWithAuth@ in most cases.
 threeLegToken :: MonadIO m => String -> String -> m Token
 threeLegToken key secret = runOAuthM (twoLegToken key secret) $ do
     signRq2 HMACSHA1 Nothing reqUrl >>= oauthRequest CurlClient
