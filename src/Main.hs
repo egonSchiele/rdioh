@@ -8,7 +8,7 @@ key = strip . unsafePerformIO . readFile $ "key"
 secret = strip . unsafePerformIO . readFile $ "secret"
 
 main = do
-    tracks <- runRdio key secret $ searchForArtist "Radiohead"
+    tracks <- runRdio key secret $ search "EMI" "Label" :: IO (Either String [Label])
     case tracks of
       Left err -> putStrLn err
       Right t -> print t

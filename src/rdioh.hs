@@ -46,11 +46,18 @@ runRequest params = do
 -- RDIO methods
 
 -- CORE methods TODO they all have multiple return types.
--- get keys extras options = runRequest $ [("method", "get"), ("keys", U.join "," keys)] ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)]) ++ (addMaybe options [("options", jsonify_tuples $ fromJust options)])
 
--- getObjectFromShortCode short_code extras = runRequest $ [("method", "getObjectFromShortCode"), ("short_code", short_code)] ++ (addMaybe extras [("extras", U.join "," $ fromJust extras)])
+-- TODO this also has extras and options fields.
+-- extras: how to do this and still maintain a generic return type?
+-- options: what is this used for? No specification on api page...
+get :: (Show a, FromJSON a) => [String] -> Rdio (Either String a)
+get keys = runRequest $ [("method", "get"), ("keys", toParam keys )]
 
--- getObjectFromUrl url extras = runRequest $ [("method", "getObjectFromUrl"), ("url", url)] ++  (addEither extras [("extras", U.join "," $ fromJust extras)])
+getObjectFromShortCode :: (Show a, FromJSON a) => String -> Rdio (Either String a)
+getObjectFromShortCode shortCode = runRequest $ [("method", "getObjectFromShortCode"), ("short_code", shortCode)]
+
+getObjectFromUrl :: (Show a, FromJSON a) => String -> Rdio (Either String a)
+getObjectFromUrl url = runRequest $ [("method", "getObjectFromUrl"), ("url", url)]
 
 -- CATALOG methods
 
@@ -101,15 +108,15 @@ getTracksForArtist' artist appears_on extras start count =
                     <+> ("start", start)
                     <+> ("count", count)
 
--- TODO implement search for everything else...maybe generate this
--- programmatically?
-searchForArtist :: String -> Rdio (Either String [Artist])
-searchForArtist query = searchForArtist' query Nothing [] Nothing Nothing
+-- TODO this should also have an extras field but how to implement that and
+-- still be able to return a generic type?
+search :: (Show a, FromJSON a) => String -> String -> Rdio (Either String [a])
+search query types = search' query types Nothing Nothing Nothing
 
-searchForArtist' :: String -> Maybe Bool -> [ArtistExtra] -> Maybe Int -> Maybe Int -> Rdio (Either String [Artist])
-searchForArtist' query never_or extras start count = do
-    res <- runRequest $ [("method", "search"), ("query", query), ("types", "Artist"), mkExtras extras]
-                   <+> ("never_or", never_or)
+search' :: (Show a, FromJSON a) => String -> String -> Maybe Bool -> Maybe Int -> Maybe Int -> Rdio (Either String [a])
+search' query types neverOr start count = do
+    res <- runRequest $ [("method", "search"), ("query", query), ("types", types)]
+                   <+> ("never_or", neverOr)
                    <+> ("start", start)
                    <+> ("count", count)
 

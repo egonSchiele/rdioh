@@ -115,7 +115,7 @@ data Label = Label {
            labelKey :: String,
            labelUrl :: String,
            labelShortUrl :: String,
-           labelHasRadio :: String,
+           labelHasRadio :: Bool,
            labelRadioKey :: String
 } deriving (Show)
 

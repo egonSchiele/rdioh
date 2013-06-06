@@ -43,3 +43,53 @@ instance Param Scope where
 instance Param Timeframe where
     toParam = show
 
+-- class RdioType a where
+--     typeName :: String
+
+-- instance RdioType Album where
+--   typeName = "Album"
+
+-- instance RdioType Artist where
+--   typeName = "Artist"
+
+-- instance RdioType Label where
+--   typeName = "Label"
+
+-- instance RdioType Track where
+--   typeName = "Track"
+
+-- instance RdioType Playlist where
+--   typeName = "Playlist"
+
+-- instance RdioType UserPlaylists where
+--   typeName = "UserPlaylists"
+
+-- instance RdioType User where
+--   typeName = "User"
+
+-- instance RdioType CollectionAlbum where
+--   typeName = "CollectionAlbum"
+
+-- instance RdioType CollectionArtist where
+--   typeName = "CollectionArtist"
+
+-- instance RdioType LabelStation where
+--   typeName = "LabelStation"
+
+-- instance RdioType ArtistStation where
+--   typeName = "ArtistStation"
+
+-- instance RdioType HeavyRotationUserStation where
+--   typeName = "HeavyRotationUserStation"
+
+-- instance RdioType ArtistTopSongsStation where
+--   typeName = "ArtistTopSongsStation"
+
+-- instance RdioType UserCollectionStation where
+--   typeName = "UserCollectionStation"
+
+-- instance RdioType SearchResults where
+--   typeName = "SearchResults"
+
+-- instance RdioType Activity where
+--   typeName = "Activity"

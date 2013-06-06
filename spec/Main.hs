@@ -1,5 +1,6 @@
 import Test.Hspec
 import Rdioh
+import Rdioh.Models
 import System.IO.Unsafe
 import Data.String.Utils
 import Data.Aeson
@@ -22,15 +23,15 @@ main = hspec $ do
     it "getAlbumsForArtist" $ do
       testMethod $ getAlbumsForArtist "r91318" -- Radiohead
     it "getAlbumsForLabel" $ do
-      testMethod $ getAlbumsForLabel ""
+      testMethod $ getAlbumsForLabel "l202397"
     it "getArtistsForLabel" $ do
-      testMethod $ getArtistsForLabel ""
+      testMethod $ getArtistsForLabel "l202397"
     it "getTracksByISRC" $ do
       testMethod $ getTracksByISRC "" []
     it "getTracksForArtist" $ do
       testMethod $ getTracksForArtist "r91318"
-    it "searchForArtist" $ do
-      testMethod $ searchForArtist "Radiohead"
+    it "search" $ do
+      testMethod $ (search "Radiohead" "Artist" :: Rdio (Either String [Label]))
     it "getAlbumsForArtistInCollection" $ do
       testMethod $ getAlbumsForArtistInCollection ""
     it "getAlbumsInCollection'" $ do
