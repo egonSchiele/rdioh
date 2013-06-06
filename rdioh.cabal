@@ -10,7 +10,7 @@ build-type: Simple
 cabal-version: >= 1.8
 synopsis: A Haskell wrapper for Rdio's API.
 description: This library implements methods for Rdio's API.
-			 It supports 2-legged and 3-legged OAuth.
+			 It supports 2-legged and 3-legged OAuth. See Rdio's API for reference: http://developer.rdio.com/docs/read/rest/Methods
 
 library
   build-depends: base >= 3 && <= 5 , mtl , MissingH , bytestring , json , hoauth , urlencoded, aeson, containers, transformers

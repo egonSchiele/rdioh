@@ -5,14 +5,17 @@ import qualified Data.List.Utils as U
 import qualified Text.JSON as J
 import Rdioh.Models
 
--- convert a list of parameters to a string that can be passed via GET/POST
+-- | used internally to convert a list of parameters to a string that can be passed via GET/POST
 toParams :: [(String, String)] -> String
 toParams = show . UE.importList
 
+-- | used internally
 (<+>) :: Param p => [(String, String)] -> (String, Maybe p) -> [(String, String)]
 arr <+> (_, Nothing) = arr
 arr <+> (str, (Just param)) = arr ++ [(str, toParam param)]
 
+-- | used internally to easily convert different Rdio types to params for
+-- | requests. You can use @toParam@ to do this if you want.
 class Param a where
     toParam :: a -> String
 

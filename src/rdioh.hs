@@ -19,18 +19,28 @@ import Control.Applicative
 import Data.Aeson
 import qualified Debug.Trace as D
 
+-- | Takes: a key, a secret, a function to run.
 runRdio :: String -> String -> Rdio a -> IO a
 runRdio key secret func = runReaderT func (twoLegToken key secret)
 
+-- | Same as @runRdio@, but with 3-legged authentication i.e. the user will
+-- | have to authorize your app.
 runRdioWithAuth :: String -> String -> Rdio a -> IO a
 runRdioWithAuth key secret func = do
     tok <- liftIO (threeLegToken key secret)
     runReaderT func tok
 
+-- | The @Rdio@ monad...just a wrapper around a @ReaderT@ monad.
 type Rdio a = ReaderT Token IO a
 
--- uses the Reader monad to get a token. Then uses that token
--- to make a request to the service url.
+-- | used internally
+mkExtras :: Show e => [e] -> (String, String)
+mkExtras extras = ("extras", U.join "," $ show <$> extras)
+
+-- | Send a arbitrary request to rdio's api. Return type should
+-- | be an instance of @FromJSON@, and you need to specify the type. Example:
+--
+-- > result <- (runRequest [("method", "getTopCharts"), ("type", "Artist")] :: Rdio (Either String [Artist]))
 runRequest :: (Show v, FromJSON v) => [(String, String)] -> Rdio (Either String v)
 runRequest params = do
     tok <- ask
@@ -49,23 +59,27 @@ runRequest params = do
 
 -- TODO currently unsupported because it has a variable specification.
 -- All you can really do is request an Object back.
+
+-- | Takes: [keys], [extras] (optional)
 get :: (Show a, FromJSON a) => [String] -> [String] -> Rdio (Either String a)
 get keys extras = runRequest $ [("method", "get"), ("keys", toParam keys), ("extras", toParam extras)]
 
+-- | Takes: short code (everything after the http://rd.io/x/), [extras]
+-- (optional)
 getObjectFromShortCode :: (Show a, FromJSON a) => String -> [String] -> Rdio (Either String a)
 getObjectFromShortCode shortCode extras = runRequest $ [("method", "getObjectFromShortCode"), ("short_code", shortCode), ("extras", toParam extras)]
 
+-- | Takes: url (everything after http://rdio.com/), [extras] (optional)
 getObjectFromUrl :: (Show a, FromJSON a) => String -> [String] -> Rdio (Either String a)
 getObjectFromUrl url extras = runRequest $ [("method", "getObjectFromUrl"), ("url", url), ("extras", toParam extras)]
 
 -- CATALOG methods
 
-mkExtras :: Show e => [e] -> (String, String)
-mkExtras extras = ("extras", U.join "," $ show <$> extras)
-
+-- | Takes: a UPC code, [extras] (optional)
 getAlbumsByUPC :: Int -> [AlbumExtra] -> Rdio (Either String [Album])
 getAlbumsByUPC upc extras = runRequest $ [("method", "getAlbumsByUPC"), ("upc", toParam upc), mkExtras extras]
 
+-- | Takes: A key of an artist
 getAlbumsForArtist :: String -> Rdio (Either String [Album])
 getAlbumsForArtist artist = getAlbumsForArtist' artist Nothing [] Nothing Nothing
 
@@ -76,6 +90,7 @@ getAlbumsForArtist' artist featuring extras start count =
                    <+> ("start", start)
                    <+> ("count", count)
 
+-- | Takes: a key of a label
 getAlbumsForLabel :: String -> Rdio (Either String [Album])
 getAlbumsForLabel label = getAlbumsForLabel' label [] Nothing Nothing
 
@@ -85,6 +100,7 @@ getAlbumsForLabel' label extras start count =
                    <+> ("start", start)
                    <+> ("count", count)
 
+-- | Takes: a key of a label
 getArtistsForLabel :: String -> Rdio (Either String [Artist])
 getArtistsForLabel label = getArtistsForLabel' label [] Nothing Nothing
 
@@ -94,9 +110,11 @@ getArtistsForLabel' label extras start count =
                    <+> ("start", start)
                    <+> ("count", count)
 
+-- | Takes: an ISRC code, [extras] (optional)
 getTracksByISRC :: String -> [TrackExtra] -> Rdio (Either String [Track])
 getTracksByISRC isrc extras = runRequest $ [("method", "getTracksByISRC"), ("isrc", isrc), mkExtras extras]
 
+-- | Takes: an artist key
 getTracksForArtist :: String -> Rdio (Either String [Track])
 getTracksForArtist artist = getTracksForArtist' artist Nothing [] Nothing Nothing
 
@@ -109,6 +127,12 @@ getTracksForArtist' artist appears_on extras start count =
 
 -- TODO this should also have an extras field but how to implement that and
 -- still be able to return a generic type?
+-- | Takes: a query, a type (\"Artist\", \"Album\", \"Track\", \"Playlist\", or
+-- \"User\")
+-- This method can return any of those types, so you need to specify what
+-- you want returned. Example:
+--
+-- > search "Radiohead" "Artist" :: Rdio (Either String [Artist])
 search :: (Show a, FromJSON a) => String -> String -> Rdio (Either String [a])
 search query types = search' query types Nothing Nothing Nothing
 
@@ -123,9 +147,12 @@ search' query types neverOr start count = do
 
 -- TODO searchSuggestions
 
+-- | Takes: a list of keys of tracks or playlists. *Requires
+-- authentication*.
 addToCollection :: [String] -> Rdio (Either String Object)
 addToCollection keys = runRequest $ [("method", "addToCollection"), ("keys", toParam keys)]
 
+-- | Takes: an artist key. Requires authentication OR use @getAlbumsForArtistInCollection'@ and pass in a user key.
 getAlbumsForArtistInCollection :: String -> Rdio (Either String [Album])
 getAlbumsForArtistInCollection artist = getAlbumsForArtistInCollection' artist Nothing [] Nothing
 
@@ -135,6 +162,8 @@ getAlbumsForArtistInCollection' artist user extras sort =
                   <+> ("user", user)
                   <+> ("sort", sort)
 
+-- | Requires authentication OR use @getAlbumsInCollection'@ and pass in
+-- a user key.
 getAlbumsInCollection :: Rdio (Either String [Album])
 getAlbumsInCollection = getAlbumsInCollection' Nothing Nothing Nothing Nothing Nothing []
 
@@ -147,6 +176,8 @@ getAlbumsInCollection' user start count sort query extras =
                   <+> ("sort", sort)
                   <+> ("query", query)
 
+-- | Requires authentication OR use @getArtistsInCollection'@ and pass in
+-- a user key.
 getArtistsInCollection :: Rdio (Either String [Artist])
 getArtistsInCollection = getArtistsInCollection' Nothing Nothing Nothing Nothing Nothing []
 
@@ -159,6 +190,7 @@ getArtistsInCollection' user start count sort query extras =
                   <+> ("sort", sort)
                   <+> ("query", query)
 
+-- | Requires authentication.
 getOfflineTracks :: Rdio (Either String [Track])
 getOfflineTracks = getOfflineTracks' Nothing Nothing []
 
@@ -168,6 +200,7 @@ getOfflineTracks' start count extras =
                   <+> ("start", start)
                   <+> ("count", count)
 
+-- | Takes: an album key. Requires authentication OR use @getTracksForAlbumInCollection'@ and pass in a user key.
 getTracksForAlbumInCollection :: String -> Rdio (Either String [Track])
 getTracksForAlbumInCollection album = getTracksForAlbumInCollection' album Nothing []
 
@@ -176,6 +209,7 @@ getTracksForAlbumInCollection' album user extras =
     runRequest $ [("method", "getTracksForAlbumInCollection"), ("album", album), mkExtras extras]
                   <+> ("user", user)
 
+-- | Takes: an artist key. Requires authentication OR use @getTracksForArtistInCollection'@ and pass in a user key.
 getTracksForArtistInCollection :: String -> Rdio (Either String [Track])
 getTracksForArtistInCollection artist = getTracksForArtistInCollection' artist Nothing []
 
@@ -184,6 +218,8 @@ getTracksForArtistInCollection' artist user extras =
     runRequest $ [("method", "getTracksForArtistInCollection"), ("artist", artist), mkExtras extras]
                   <+> ("user", user)
 
+-- | Requires authentication OR use @getTracksInCollection'@ and pass in
+-- a user key.
 getTracksInCollection :: Rdio (Either String [Track])
 getTracksInCollection = getTracksInCollection' Nothing Nothing Nothing Nothing Nothing []
 
@@ -196,22 +232,31 @@ getTracksInCollection' user start count sort query extras =
                    <+> ("sort", sort)
                    <+> ("query", query)
 
+-- | Takes: a list of track or playlist keys. Requires authentication.
 removeFromCollection :: [String] -> Rdio (Either String Bool)
 removeFromCollection keys = runRequest $ [("method", "removeFromCollection"), ("keys", toParam keys)]
 
+-- | Takes: a list of track or playlist keys. Requires authentication.
 setAvailableOffline :: [String] -> Bool -> Rdio (Either String Object)
 setAvailableOffline keys offline = runRequest $ [("method", "setAvailableOffline"), ("keys", toParam keys), ("offline", toParam offline)]
 
+-- | Takes: a playlist key, a list of track keys to add to the playlist,
+-- [extras] (optional).
+-- Requires authentication.
 addToPlaylist :: String -> [String] -> [PlaylistExtra] -> Rdio (Either String Playlist)
 addToPlaylist playlist tracks extras = runRequest $ [("method", "addToPlaylist"), ("playlist", playlist), ("tracks", toParam tracks), mkExtras extras]
 
+-- | Takes: a name, a description, a list of track keys to start the
+-- playlist with, [extras] (optional). Requires authentication.
 createPlaylist :: String -> String -> [String] -> [PlaylistExtra] -> Rdio (Either String Playlist)
 createPlaylist name description tracks extras =
     runRequest $ [("method", "createPlaylist"), ("name", name), ("description", description), ("tracks", toParam tracks), mkExtras extras]
 
+-- | Takes: a playlist key. Requires authentication.
 deletePlaylist :: String -> Rdio (Either String Bool)
 deletePlaylist playlist = runRequest $ [("method", "deletePlaylist"), ("playlist", playlist)]
 
+-- | Requires authentication OR use @getPlaylists'@ and pass in a user key.
 getPlaylists :: Rdio (Either String UserPlaylists)
 getPlaylists = getPlaylists' Nothing [] Nothing
 
@@ -221,6 +266,7 @@ getPlaylists' user extras orderedList =
                    <+> ("user", user)
                    <+> ("ordered_list", orderedList)
 
+-- | Requires authentication OR use @getUserPlaylists'@ and pass in a user key.
 getUserPlaylists :: String -> Rdio (Either String [Playlist])
 getUserPlaylists user = getUserPlaylists' user Nothing Nothing Nothing Nothing []
 
@@ -232,41 +278,66 @@ getUserPlaylists' user kind sort start count extras =
                    <+> ("start", start)
                    <+> ("count", count)
 
+-- | Takes:
+-- - a playlist key
+--
+-- - the index of the first item to remove
+--
+-- - number of tracks to remove
+--
+-- - the keys of the tracks to remove (redundancy to prevent accidental
+-- deletion)
+--
+-- - [extras] (optional)
+--
+-- Requires authentication.
 removeFromPlaylist :: String -> Int -> Int -> Int -> [PlaylistExtra] -> Rdio (Either String Playlist)
 removeFromPlaylist playlist index count tracks extras =
     runRequest $ [("method", "removeFromPlaylist"), ("playlist", playlist), ("index", toParam index), ("count", toParam count), ("tracks", toParam tracks), mkExtras extras]
 
+-- | Takes: a playlist key, a boolean (true == collaborating, false == not
+-- collaborating). Requires authentication.
 setPlaylistCollaborating :: String -> Bool -> Rdio (Either String Bool)
 setPlaylistCollaborating playlist collaborating =
     runRequest $ [("method", "setPlaylistCollaborating"), ("playlist", playlist), ("collaborating", toParam collaborating)]
 
+-- | Takes: a playlist key, a collaboration mode. Requires authentication.
 setPlaylistCollaborationMode :: String -> CollaborationMode -> Rdio (Either String Bool)
 setPlaylistCollaborationMode playlist mode =
     runRequest $ [("method", "setPlaylistCollaborationMode"), ("playlist", playlist), ("mode", toParam mode)]
 
+-- | Takes: a playlist key, a name, a description. Requires authentication.
 setPlaylistFields :: String -> String -> String -> Rdio (Either String Bool)
 setPlaylistFields playlist name description =
     runRequest $ [("method", "setPlaylistFields"), ("playlist", playlist), ("name", name), ("description", description)]
 
+-- | Takes: a playlist key, a list of track keys, [extras] (optional).
+-- Requires authentication.
 setPlaylistOrder :: String -> [String] -> [PlaylistExtra] -> Rdio (Either String Playlist)
 setPlaylistOrder playlist tracks extras =
     runRequest $ [("method", "setPlaylistOrder"), ("playlist", playlist), ("tracks", toParam tracks), mkExtras extras]
 
+-- | Takes: a user key. Requires authentication.
 addFriend :: String -> Rdio (Either String Bool)
 addFriend user = runRequest $ [("method", "addFriend"), ("user", user)]
 
+-- | Requires authentication.
 currentUser :: [UserExtra] -> Rdio (Either String User)
 currentUser extras = runRequest $ [("method", "currentUser"), mkExtras extras]
 
+-- | Takes: an email address, [extras] (optional).
 findUserByEmail :: String -> [UserExtra] -> Rdio (Either String User)
 findUserByEmail email extras = runRequest $ [("method", "findUser"), ("email", email), mkExtras extras]
 
+-- | Takes: user name, [extras] (optional).
 findUserByName :: String -> [UserExtra] -> Rdio (Either String User)
 findUserByName vanityName extras = runRequest $ [("method", "findUser"), ("vanityName", vanityName), mkExtras extras]
 
+-- | Takes: a user key. Requires authentication.
 removeFriend :: String -> Rdio (Either String Bool)
 removeFriend user = runRequest $ [("method", "removeFriend"), ("user", user)]
 
+-- | Takes: a user key.
 userFollowers :: String -> Rdio (Either String [User])
 userFollowers user = userFollowers' user Nothing Nothing [] Nothing
 
@@ -277,6 +348,7 @@ userFollowers' user start count extras inCommon =
                    <+> ("count", count)
                    <+> ("inCommon", inCommon)
 
+-- | Takes: a user key.
 userFollowing :: String -> Rdio (Either String [User])
 userFollowing user = userFollowing' user Nothing Nothing [] Nothing
 
@@ -292,6 +364,8 @@ userFollowing' user start count extras inCommon =
 -- this context. Also, the docs say there will be additional data depending
 -- on the update_type. Without specifying crap. So this is incomplete for
 -- now.
+
+-- | Takes: a user key, a scope.
 getActivityStream :: String -> Scope -> Rdio (Either String Activity)
 getActivityStream user scope = getActivityStream' user scope Nothing Nothing
 
@@ -373,5 +447,7 @@ getTopChartPlaylists' start count extras =
                    <+> ("start", start)
                    <+> ("count", count)
 
+-- | Takes: the domain that the playback SWF will be embedded in
+-- (optional).
 getPlaybackToken :: Maybe String -> Rdio (Either String String)
 getPlaybackToken domain = runRequest $ [("method", "getPlaybackToken")] <+> ("domain", domain)

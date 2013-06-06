@@ -52,3 +52,5 @@ main = do
             Left err -> liftIO $ putStrLn err
             Right albums -> liftIO $ mapM_ (putStrLn . albumName) albums
 ```
+
+See `spec/Main.hs` for an example on each method.
