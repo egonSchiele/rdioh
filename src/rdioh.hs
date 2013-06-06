@@ -39,7 +39,7 @@ runRequest params = do
                       request_ <- signRq2 HMACSHA1 Nothing request
                       serviceRequest CurlClient request_
 
-    -- D.trace (show . rspPayload $ response) (return ())
+    -- D.trace (B.unpack . rspPayload $ response) (return ())
     let value = eitherDecode . rspPayload $ response
     return $ rdioResult <$> value
 

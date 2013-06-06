@@ -150,8 +150,6 @@ data Track = Track {
            trackIsClean :: Bool,
            trackUrl :: String,
            trackBaseIcon :: String,
-           trackAlbumArtist :: String,
-           trackAlbumArtistKey :: String,
            trackCanDownload :: Bool,
            trackCanDownloadAlbumOnly :: Bool,
            trackCanStream :: Bool,
@@ -162,6 +160,8 @@ data Track = Track {
            trackKey :: String,
            trackIcon :: String,
            trackNum :: Int,
+           trackAlbumArtist :: Maybe String,
+           trackAlbumArtistKey :: Maybe String,
            isInCollection :: Maybe Bool,
            isOnCompilation :: Maybe Bool,
            isrcs :: Maybe [String],
@@ -183,8 +183,6 @@ instance FromJSON Track where
                                <*> v .: "isClean"
                                <*> v .: "url"
                                <*> v .: "baseIcon"
-                               <*> v .: "albumArtist"
-                               <*> v .: "albumArtistKey"
                                <*> v .: "canDownload"
                                <*> v .: "canDownloadAlbumOnly"
                                <*> v .: "canStream"
@@ -195,6 +193,8 @@ instance FromJSON Track where
                                <*> v .: "key"
                                <*> v .: "icon"
                                <*> v .: "trackNum"
+                               <*> v .:? "albumArtist"
+                               <*> v .:? "albumArtistKey"
                                <*> v .:? "isInCollection"
                                <*> v .:? "isOnCompilation"
                                <*> v .:? "isrcs"
@@ -225,18 +225,18 @@ instance Show PlaylistExtra where
 
 data Playlist = Playlist {
               plName :: String,
-              plLength :: Int,
               plUrl :: String,
-              plIcon :: String,
-              plBaseIcon :: String,
               plOwner :: String,
               plOwnerUrl :: String,
               plOwnerKey :: String,
               plOwnerIcon :: String,
-              lastUpdated :: Int,
               plShortUrl :: String,
               plEmbedUrl :: String,
               plKey :: String,
+              plLength :: Maybe Int,
+              plIcon :: Maybe String,
+              plBaseIcon :: Maybe String,
+              lastUpdated :: Maybe Int,
               plIFrameUrl :: Maybe String,
               isViewable :: Maybe Bool,
               plBigIcon :: Maybe String,
@@ -249,18 +249,18 @@ data Playlist = Playlist {
 
 instance FromJSON Playlist where
   parseJSON (Object v) = Playlist <$> v .: "name"
-                                  <*> v .: "length"
                                   <*> v .: "url"
-                                  <*> v .: "icon"
-                                  <*> v .: "baseIcon"
                                   <*> v .: "owner"
                                   <*> v .: "ownerUrl"
                                   <*> v .: "ownerKey"
                                   <*> v .: "ownerIcon"
-                                  <*> v .: "lastUpdated"
                                   <*> v .: "shortUrl"
                                   <*> v .: "embedUrl"
                                   <*> v .: "key"
+                                  <*> v .:? "length"
+                                  <*> v .:? "icon"
+                                  <*> v .:? "baseIcon"
+                                  <*> v .:? "lastUpdated"
                                   <*> v .:? "iframeUrl"
                                   <*> v .:? "isViewable"
                                   <*> v .:? "bigIcon"
