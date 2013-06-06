@@ -276,7 +276,7 @@ data UserPlaylists = UserPlaylists {
                    upOwned :: [Playlist],
                    upCollab :: [Playlist],
                    upSubscribed :: [Playlist]
-}
+} deriving (Show)
 
 instance FromJSON UserPlaylists where
   parseJSON (Object v) = UserPlaylists <$> v .: "owned"
@@ -687,7 +687,7 @@ instance Show PlaylistType where
     show Collab = "collab"
     show Subscribed = "subscribed"
 
-data CollaborationMode = NoCollaboration | CollaborationWithAll | CollaborationWithFollowed deriving (show)
+data CollaborationMode = NoCollaboration | CollaborationWithAll | CollaborationWithFollowed deriving (Show)
 
 data Scope = UserScope | FriendScope | AllScope
 
@@ -725,7 +725,7 @@ data Update = Update {
                 owner :: User,
                 date :: String,
                 updateType :: UpdateType
-}
+} deriving (Show)
 
 instance FromJSON Update where
   parseJSON (Object v) = Update <$> v .: "owner"

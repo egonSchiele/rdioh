@@ -1,5 +1,4 @@
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
-
 module Rdioh.Util where
 import qualified Data.URLEncoded as UE
 import qualified Data.List.Utils as U

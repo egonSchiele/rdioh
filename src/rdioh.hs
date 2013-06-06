@@ -17,7 +17,6 @@ import Rdioh.Util
 import Rdioh.Models
 import Control.Applicative
 import Data.Aeson
-import Data.Map
 import qualified Debug.Trace as D
 
 runRdio :: String -> String -> Rdio a -> IO a
@@ -202,7 +201,7 @@ addToPlaylist playlist tracks extras = runRequest $ [("method", "addToPlaylist")
 
 createPlaylist :: String -> String -> [String] -> [PlaylistExtra] -> Rdio (Either String Playlist)
 createPlaylist name description tracks extras =
-    runRequest $ [("method", "createPlaylist"), ("name", name), ("description", description), "tracks", toParam tracks), mkExtras extras]
+    runRequest $ [("method", "createPlaylist"), ("name", name), ("description", description), ("tracks", toParam tracks), mkExtras extras]
 
 deletePlaylist :: String -> Rdio (Either String Bool)
 deletePlaylist playlist = runRequest $ [("method", "deletePlaylist"), ("playlist", playlist)]
@@ -227,17 +226,17 @@ getUserPlaylists' user kind sort start count extras =
                    <+> ("start", start)
                    <+> ("count", count)
 
-removeFromPlaylist :: String -> Int -> Int -> Int -> [PlaylistExtra]
+removeFromPlaylist :: String -> Int -> Int -> Int -> [PlaylistExtra] -> Rdio (Either String Playlist)
 removeFromPlaylist playlist index count tracks extras =
-    runRequest $ [("method", "removeFromPlaylist"), ("playlist", playlist), ("index", index), ("count", count), ("tracks", tracks), ("extras", extras), mkExtras extras]
+    runRequest $ [("method", "removeFromPlaylist"), ("playlist", playlist), ("index", toParam index), ("count", toParam count), ("tracks", toParam tracks), mkExtras extras]
 
 setPlaylistCollaborating :: String -> Bool -> Rdio (Either String Bool)
 setPlaylistCollaborating playlist collaborating =
-    runRequest $ [("method", "setPlaylistCollaborating"), ("playlist", playlist), ("collaborating", collaborating), mkExtras extras]
+    runRequest $ [("method", "setPlaylistCollaborating"), ("playlist", playlist), ("collaborating", toParam collaborating)]
 
 setPlaylistCollaborationMode :: String -> CollaborationMode -> Rdio (Either String Bool)
 setPlaylistCollaborationMode playlist mode =
-    runRequest $ [("method", "setPlaylistCollaborationMode"), ("playlist", playlist), ("mode", mode)]
+    runRequest $ [("method", "setPlaylistCollaborationMode"), ("playlist", playlist), ("mode", toParam mode)]
 
 setPlaylistFields :: String -> String -> String -> Rdio (Either String Bool)
 setPlaylistFields playlist name description =
