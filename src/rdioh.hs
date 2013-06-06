@@ -182,7 +182,7 @@ getTracksForArtistInCollection artist = getTracksForArtistInCollection' artist N
 
 getTracksForArtistInCollection' :: String -> Maybe String -> [TrackExtra] -> Rdio (Either String [Track])
 getTracksForArtistInCollection' artist user extras =
-    runRequest $ [("method", "getTracksForArtistInCollection"), ("album", artist), mkExtras extras]
+    runRequest $ [("method", "getTracksForArtistInCollection"), ("artist", artist), mkExtras extras]
                   <+> ("user", user)
 
 getTracksInCollection :: Rdio (Either String [Track])

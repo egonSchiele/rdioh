@@ -37,7 +37,7 @@ main = hspec $ do
     it "getTracksForArtist" $ do
       testMethod $ getTracksForArtist radiohead
     it "search" $ do
-      testMethod $ (search "Radiohead" "Artist" :: Rdio (Either String [Label]))
+      testMethod $ (search "Radiohead" "Artist" :: Rdio (Either String [Artist]))
     it "getAlbumsForArtistInCollection'" $ do
       testMethod $ getAlbumsForArtistInCollection' radiohead (Just me) [] Nothing -- me
     it "getAlbumsInCollection'" $ do
