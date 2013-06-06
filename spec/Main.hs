@@ -21,9 +21,17 @@ me = "s361565"
 emi = "l202397"
 
 okcomputer = "a171828"
+okcomputerShortCode = "QVrGAiJdzXU"
+okComputerUrl = "/artist/Radiohead/album/OK_Computer_(Collector%27s_Edition)/"
 
 main = hspec $ do
-  describe "test methods" $ do
+  describe "make sure methods return valid models" $ do
+    it "get" $ do
+      testMethod $ (get [radiohead] [] :: Rdio (Either String Object))
+    it "getObjectFromShortCode" $ do
+      testMethod $ (getObjectFromShortCode okcomputerShortCode [] :: Rdio (Either String Album))
+    it "getObjectFromUrl" $ do
+      testMethod $ (getObjectFromUrl okComputerUrl [] :: Rdio (Either String Album))
     it "getAlbumsByUPC" $ do
       testMethod $ getAlbumsByUPC 654979031628 []
     it "getAlbumsForArtist" $ do

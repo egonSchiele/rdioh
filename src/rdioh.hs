@@ -47,17 +47,16 @@ runRequest params = do
 
 -- CORE methods TODO they all have multiple return types.
 
--- TODO this also has extras and options fields.
--- extras: how to do this and still maintain a generic return type?
--- options: what is this used for? No specification on api page...
-get :: (Show a, FromJSON a) => [String] -> Rdio (Either String a)
-get keys = runRequest $ [("method", "get"), ("keys", toParam keys )]
+-- TODO currently unsupported because it has a variable specification.
+-- All you can really do is request an Object back.
+get :: (Show a, FromJSON a) => [String] -> [String] -> Rdio (Either String a)
+get keys extras = runRequest $ [("method", "get"), ("keys", toParam keys), ("extras", toParam extras)]
 
-getObjectFromShortCode :: (Show a, FromJSON a) => String -> Rdio (Either String a)
-getObjectFromShortCode shortCode = runRequest $ [("method", "getObjectFromShortCode"), ("short_code", shortCode)]
+getObjectFromShortCode :: (Show a, FromJSON a) => String -> [String] -> Rdio (Either String a)
+getObjectFromShortCode shortCode extras = runRequest $ [("method", "getObjectFromShortCode"), ("short_code", shortCode), ("extras", toParam extras)]
 
-getObjectFromUrl :: (Show a, FromJSON a) => String -> Rdio (Either String a)
-getObjectFromUrl url = runRequest $ [("method", "getObjectFromUrl"), ("url", url)]
+getObjectFromUrl :: (Show a, FromJSON a) => String -> [String] -> Rdio (Either String a)
+getObjectFromUrl url extras = runRequest $ [("method", "getObjectFromUrl"), ("url", url), ("extras", toParam extras)]
 
 -- CATALOG methods
 
