@@ -1,0 +1,103 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Rdioh by egonSchiele</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Rdioh</h1>
+        <p>RDIO API wrapper in Haskell</p>
+
+        <p class="view"><a href="https://github.com/egonSchiele/rdioh">View the Project on GitHub <small>egonSchiele/rdioh</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/egonSchiele/rdioh/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/egonSchiele/rdioh/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/egonSchiele/rdioh">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a name="rdioh" class="anchor" href="#rdioh"><span class="octicon octicon-link"></span></a>Rdioh</h1>
+
+<h2>
+<a name="about" class="anchor" href="#about"><span class="octicon octicon-link"></span></a>About</h2>
+
+<p>This package is a near-complete implementation of <a href="http://rdio.com">Rdio</a>'s API in Haskell.</p>
+
+<h2>
+<a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h2>
+
+<pre><code>cabal install rdioh
+</code></pre>
+
+<h2>
+<a name="usage" class="anchor" href="#usage"><span class="octicon octicon-link"></span></a>Usage</h2>
+
+<p>First you need a key and a secret. You can get both <a href="http://developer.rdio.com/member/register">here</a>.</p>
+
+<p>Then usage is simple:</p>
+
+<div class="highlight"><pre><span class="nf">main</span> <span class="ow">=</span> <span class="kr">do</span>
+    <span class="n">result</span> <span class="ow">&lt;-</span> <span class="n">runRdio</span> <span class="n">key</span> <span class="n">secret</span> <span class="o">$</span> <span class="n">getTopChartAlbums</span>
+    <span class="kr">case</span> <span class="n">result</span> <span class="kr">of</span>
+      <span class="kt">Left</span> <span class="n">err</span> <span class="ow">-&gt;</span> <span class="n">putStrLn</span> <span class="n">err</span>
+      <span class="kt">Right</span> <span class="n">albums</span> <span class="ow">-&gt;</span> <span class="n">mapM_</span> <span class="p">(</span><span class="n">putStrLn</span> <span class="o">.</span> <span class="n">albumName</span><span class="p">)</span> <span class="n">albums</span>
+</pre></div>
+
+<p>Everything runs in the <code>Rdio</code> Monad, which is just the <code>ReaderT</code> monad.</p>
+
+<h2>
+<a name="authentication" class="anchor" href="#authentication"><span class="octicon octicon-link"></span></a>Authentication</h2>
+
+<p><code>runRdio</code> is for methods that don't require user authentication. Use <code>runRdioWithAuth</code> for methods that require user authentication, like <code>createPlaylist</code>. If you use <code>runRdioWithAuth</code>, your user will see a message like so:</p>
+
+<pre><code>open https://www.rdio.com/oauth/authorize?oauth_token=asdaslkjfsd
+oauth_verifier: 
+</code></pre>
+
+<p>To complete authentication, he / she will have to open the url, hit 'Allow', and paste the given PIN back into your application.</p>
+
+<h2>
+<a name="longer-example" class="anchor" href="#longer-example"><span class="octicon octicon-link"></span></a>Longer Example</h2>
+
+<p>List all albums for Radiohead:</p>
+
+<div class="highlight"><pre><span class="kr">import</span> <span class="nn">Rdioh</span>
+<span class="kr">import</span> <span class="nn">Rdioh.Models</span>
+<span class="kr">import</span> <span class="nn">Control.Monad.IO.Class</span>
+
+<span class="nf">main</span> <span class="ow">=</span> <span class="kr">do</span>
+    <span class="n">runRdio</span> <span class="n">key</span> <span class="n">secret</span> <span class="o">$</span> <span class="kr">do</span>
+      <span class="n">res1</span> <span class="ow">&lt;-</span> <span class="n">search</span> <span class="s">"Radiohead"</span> <span class="s">"Artist"</span> <span class="ow">::</span> <span class="kt">Rdio</span> <span class="p">(</span><span class="kt">Either</span> <span class="kt">String</span> <span class="p">[</span><span class="kt">Artist</span><span class="p">])</span>
+      <span class="kr">case</span> <span class="n">res1</span> <span class="kr">of</span>
+        <span class="kt">Left</span> <span class="n">err</span> <span class="ow">-&gt;</span> <span class="n">liftIO</span> <span class="o">$</span> <span class="n">putStrLn</span> <span class="n">err</span>
+        <span class="kt">Right</span> <span class="p">(</span><span class="n">radiohead</span><span class="kt">:</span><span class="kr">_</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="kr">do</span>
+          <span class="n">res2</span> <span class="ow">&lt;-</span> <span class="n">getAlbumsForArtist</span> <span class="p">(</span><span class="n">artistKey</span> <span class="n">radiohead</span><span class="p">)</span>
+          <span class="kr">case</span> <span class="n">res2</span> <span class="kr">of</span>
+            <span class="kt">Left</span> <span class="n">err</span> <span class="ow">-&gt;</span> <span class="n">liftIO</span> <span class="o">$</span> <span class="n">putStrLn</span> <span class="n">err</span>
+            <span class="kt">Right</span> <span class="n">albums</span> <span class="ow">-&gt;</span> <span class="n">liftIO</span> <span class="o">$</span> <span class="n">mapM_</span> <span class="p">(</span><span class="n">putStrLn</span> <span class="o">.</span> <span class="n">albumName</span><span class="p">)</span> <span class="n">albums</span>
+</pre></div>
+
+<p>See <code>spec/Main.hs</code> for an example on each method.</p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/egonSchiele">egonSchiele</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
