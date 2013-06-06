@@ -57,8 +57,8 @@ runRequest params = do
 mkExtras :: Show e => [e] -> (String, String)
 mkExtras extras = ("extras", U.join "," $ show <$> extras)
 
-getAlbumsByUPC :: String -> [AlbumExtra] -> Rdio (Either String [Album])
-getAlbumsByUPC upc extras = runRequest $ [("method", "getAlbumsByUPC"), ("upc", upc), mkExtras extras]
+getAlbumsByUPC :: Int -> [AlbumExtra] -> Rdio (Either String [Album])
+getAlbumsByUPC upc extras = runRequest $ [("method", "getAlbumsByUPC"), ("upc", toParam upc), mkExtras extras]
 
 getAlbumsForArtist :: String -> Rdio (Either String [Album])
 getAlbumsForArtist artist = getAlbumsForArtist' artist Nothing [] Nothing Nothing
