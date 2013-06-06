@@ -7,7 +7,7 @@ key = strip . unsafePerformIO . readFile $ "key"
 secret = strip . unsafePerformIO . readFile $ "secret"
 
 main = do
-    tracks <- runRdioh3 key secret $ getOfflineTracks
+    tracks <- runRdio key secret $ getTracksInCollection
     case tracks of
       Left err -> putStrLn err
       Right t -> print t

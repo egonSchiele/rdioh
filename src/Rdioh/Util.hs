@@ -1,3 +1,5 @@
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
+
 module Rdioh.Util where
 import qualified Data.URLEncoded as UE
 import qualified Text.JSON as J
@@ -20,3 +22,24 @@ instance Param Bool where
 
 instance Param Int where
     toParam val = show val
+
+instance Param String where
+    toParam val = val
+
+instance Param [String] where
+    toParam list = U.join "," list
+
+instance Param PlaylistType where
+    toParam = show
+
+instance Param CollaborationMode where
+    toParam NoCollaboration = "0"
+    toParam CollaborationWithAll = "1"
+    toParam CollaborationWithFollowed = "2"
+
+instance Param Scope where
+    toParam = show
+
+instance Param Timeframe where
+    toParam = show
+

@@ -1,5 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 
+{-
+IDEA: all of these modles could have been split up into their own modules:
+Rdioh.Model.Artist etc etc.
+Then we wouldn't have these scoping issues and all the fields could be normal names.
+
+Downside: user has to import each module explicitly to use it.
+-}
+
 module Rdioh.Models where
 import Data.Aeson
 import Control.Applicative
@@ -203,6 +211,18 @@ instance FromJSON Reason where
       | n == 2 = return OrderedAlbum
       | n == 3 = return TooFewSongs
 
+data PlaylistExtra = PlIframeUrl | IsViewable | PlBigIcon | PlDescription | PlTracks | IsPublished | PlTrackKeys | ReasonNotViewable
+
+instance Show PlaylistExtra where
+    show PlIframeUrl = "iframeUrl"
+    show IsViewable = "isViewable"
+    show PlBigIcon = "bigIcon"
+    show PlDescription = "description"
+    show PlTracks = "tracks"
+    show IsPublished = "isPublished"
+    show PlTrackKeys = "trackKeys"
+    show ReasonNotViewable = "reasonNotViewable"
+
 data Playlist = Playlist {
               plName :: String,
               plLength :: Int,
@@ -252,6 +272,18 @@ instance FromJSON Playlist where
 
 data Gender = Male | Female deriving (Show)
 
+data UserPlaylists = {
+                   upOwned :: [Playlist],
+                   upCollab :: [Playlist],
+                   upSubscribed :: [Playlist]
+}
+
+instance FromJSON UserPlaylists where
+  parseJSON (Object v) = UserPlaylists <$> v .: "owned"
+                                       <*> v .: "collab"
+                                       <*> v .: "subscribed"
+
+
 instance FromJSON Gender where
   parseJSON (String s) = return (if s == "m" then Male else Female)
 
@@ -283,6 +315,28 @@ data User = User {
               isUnlimited :: Maybe Bool,
               isSubscriber :: Maybe Bool
 } deriving (Show)
+
+data UserExtra = FollowingUrl | IsTrial | ArtistCount | LastSongPlayed | HeavyRotationKey | NetworkHeavyRotationKey | AlbumCount | TrackCount | LastSongPlayTime | Username | ReviewCount | CollectionUrl | PlaylistsUrl | CollectionKey | FollowersUrl | DisplayName | IsUnlimited | IsSubscriber
+
+instance Show UserExtra where
+    show FollowingUrl = "followingUrl"
+    show IsTrial = "isTrial"
+    show ArtistCount = "artistCount"
+    show LastSongPlayed = "lastSongPlayed"
+    show HeavyRotationKey = "heavyRotationKey"
+    show NetworkHeavyRotationKey = "networkHeavyRotationKey"
+    show AlbumCount = "albumCount"
+    show TrackCount = "trackCount"
+    show LastSongPlayTime = "lastSongPlayTime"
+    show Username = "username"
+    show ReviewCount = "reviewCount"
+    show CollectionUrl = "collectionUrl"
+    show PlaylistsUrl = "playlistsUrl"
+    show CollectionKey = "collectionkey"
+    show FollowersUrl = "followersUrl"
+    show DisplayName = "displayName"
+    show IsUnlimited = "isUnlimited"
+    show IsSubscriber = "isSubscriber"
 
 instance FromJSON User where
   parseJSON (Object v) = User <$> v .: "key"
@@ -626,8 +680,61 @@ data SearchResults v = SearchResults {
 instance FromJSON a => FromJSON (SearchResults a) where
   parseJSON (Object v) = SearchResults <$> v .: "results"
 
-data SortOrder = SortByName | SortByReleaseDate
+data PlaylistType = Owned | Collab | Subscribed
 
-instance Show SortOrder where
-    show SortByName = "name"
-    show SortByReleaseDate = "releaseDate"
+instance Show PlaylistType where
+    show Owned = "owned"
+    show Collab = "collab"
+    show Subscribed = "subscribed"
+
+data CollaborationMode = NoCollaboration | CollaborationWithAll | CollaborationWithFollowed deriving (show)
+
+data Scope = UserScope | FriendScope | AllScope
+
+instance Show Scope where
+    show UserScope = "user"
+    show FriendScope = "friends"
+    show AllScope = "everyone"
+
+data Activity = Activity {
+                  activityUser :: User,
+                  updates :: [Update]
+} deriving (Show)
+
+instance FromJSON Activity where
+  parseJSON (Object v) = Activity <$> v .: "user"
+                                  <*> v .: "updates"
+
+data UpdateType = uTrackAddedToCollection | uTrackAddedToPlaylist | uFriendAdded | uUserJoined | uCommentOnTrack | uCommentOnAlbum | uCommentOnArtist | uCommentOnPlaylist | uTrackAddedViaMatchCollection | uUserSubscribed | uTrackSynced deriving (Show)
+
+instance FromJSON UpdateType where
+  parseJSON (Number n)
+      | n == 0 = return uTrackAddedToCollection
+      | n == 1 = return uTrackAddedToPlaylist
+      | n == 3 = return uFriendAdded
+      | n == 5 = return uUserJoined
+      | n == 6 = return uCommentOnTrack
+      | n == 7 = return uCommentOnAlbum
+      | n == 8 = return uCommentOnArtist
+      | n == 9 = return uCommentOnPlaylist
+      | n == 10 = return uTrackAddedViaMatchCollection
+      | n == 11 = return uUserSubscribed
+      | n == 12 = return uTrackSynced
+    
+data Update = Update {
+                owner :: User,
+                date :: String,
+                updateType :: UpdateType
+}
+
+instance FromJSON Update where
+  parseJSON (Object v) = Update <$> v .: "owner"
+                                <*> v .: "date"
+                                <*> v .: "update_type"
+
+data Timeframe = ThisWeek | LastWeek | TwoWeeks
+
+instance Show Timeframe where
+    show ThisWeek = "thisweek"
+    show LastWeek = "lastweek"
+    show TwoWeeks = "twoweeks"
