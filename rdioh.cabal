@@ -1,5 +1,5 @@
 name: rdioh
-version: 0.2.0
+version: 0.2.1
 category: Network, API, Web
 license: MIT
 license-file: LICENSE
@@ -14,7 +14,7 @@ description: This library implements methods for Rdio's API.
 
 library
   build-depends: base >= 3 && <= 5 , mtl , MissingH , bytestring , json , hoauth , urlencoded, aeson, containers, transformers
-  exposed-modules: Rdioh, Rdioh.Models, Rdioh.Auth
+  exposed-modules: Rdioh, Rdioh.Models, Rdioh.Auth, Rdioh.Util
 
   hs-source-dirs: src
   extensions: FlexibleContexts
