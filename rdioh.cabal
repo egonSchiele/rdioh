@@ -13,14 +13,14 @@ description: This library implements methods for Rdio's API.
 			 It supports 2-legged and 3-legged OAuth. See Rdio's API for reference: http:\/\/developer.rdio.com\/docs\/read\/rest\/Methods
 
 library
-  build-depends: base >= 3 && <= 5 , mtl , MissingH , bytestring , json , hoauth , urlencoded, aeson, containers, transformers
+  build-depends: base >= 3 && <= 5 , mtl , MissingH , bytestring , hoauth , urlencoded, aeson, containers, transformers
   exposed-modules: Rdioh, Rdioh.Models, Rdioh.Auth, Rdioh.Util
 
   hs-source-dirs: src
   extensions: FlexibleContexts
 
 executable rdioh
-  build-depends: base >= 3 && <= 5 , mtl , MissingH , bytestring , json , hoauth , urlencoded, aeson, containers, transformers
+  build-depends: base >= 3 && <= 5 , mtl , MissingH , bytestring , hoauth , urlencoded, aeson, containers, transformers
   hs-source-dirs: src
   main-is: Main.hs
 
@@ -29,6 +29,6 @@ source-repository head
   location: git@github.com:egonSchiele/rdioh.git
 
 executable rdioh-spec
-  build-depends:       base >= 4.5.0 && < 5, hspec, rdioh, mtl , MissingH , bytestring , json , hoauth , urlencoded, aeson, containers, transformers
+  build-depends:       base >= 4.5.0 && < 5, hspec, rdioh, mtl , MissingH , bytestring , hoauth , urlencoded, aeson, containers, transformers
   hs-source-dirs:      spec, src
   main-is:             Main.hs

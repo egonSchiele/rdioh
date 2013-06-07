@@ -2,7 +2,6 @@
 module Rdioh.Util where
 import qualified Data.URLEncoded as UE
 import qualified Data.List.Utils as U
-import qualified Text.JSON as J
 import Rdioh.Models
 
 -- | used internally to convert a list of parameters to a string that can be passed via GET/POST
