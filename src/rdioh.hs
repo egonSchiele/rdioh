@@ -24,7 +24,7 @@ runRdio :: String -> String -> Rdio a -> IO a
 runRdio key secret func = runReaderT func (twoLegToken key secret)
 
 -- | Same as @runRdio@, but with 3-legged authentication i.e. the user will
--- | have to authorize your app.
+-- have to authorize your app.
 runRdioWithAuth :: String -> String -> Rdio a -> IO a
 runRdioWithAuth key secret func = do
     tok <- liftIO (threeLegToken key secret)
@@ -38,7 +38,7 @@ mkExtras :: Show e => [e] -> (String, String)
 mkExtras extras = ("extras", U.join "," $ show <$> extras)
 
 -- | Send a arbitrary request to rdio's api. Return type should
--- | be an instance of @FromJSON@, and you need to specify the type. Example:
+-- be an instance of @FromJSON@, and you need to specify the type. Example:
 --
 -- > result <- (runRequest [("method", "getTopCharts"), ("type", "Artist")] :: Rdio (Either String [Artist]))
 runRequest :: (Show v, FromJSON v) => [(String, String)] -> Rdio (Either String v)
@@ -129,6 +129,7 @@ getTracksForArtist' artist appears_on extras start count =
 -- still be able to return a generic type?
 -- | Takes: a query, a type (\"Artist\", \"Album\", \"Track\", \"Playlist\", or
 -- \"User\")
+--
 -- This method can return any of those types, so you need to specify what
 -- you want returned. Example:
 --
@@ -279,6 +280,7 @@ getUserPlaylists' user kind sort start count extras =
                    <+> ("count", count)
 
 -- | Takes:
+--
 -- - a playlist key
 --
 -- - the index of the first item to remove
@@ -295,7 +297,7 @@ removeFromPlaylist :: String -> Int -> Int -> Int -> [PlaylistExtra] -> Rdio (Ei
 removeFromPlaylist playlist index count tracks extras =
     runRequest $ [("method", "removeFromPlaylist"), ("playlist", playlist), ("index", toParam index), ("count", toParam count), ("tracks", toParam tracks), mkExtras extras]
 
--- | Takes: a playlist key, a boolean (true == collaborating, false == not
+-- | Takes: a playlist key, a boolean (@True@ == collaborating, @False@ == not
 -- collaborating). Requires authentication.
 setPlaylistCollaborating :: String -> Bool -> Rdio (Either String Bool)
 setPlaylistCollaborating playlist collaborating =
